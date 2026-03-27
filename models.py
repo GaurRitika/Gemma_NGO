@@ -42,6 +42,7 @@ class PipelineActionType(str, Enum):
     HANDLE_MISSING = "HANDLE_MISSING"
     MERGE_SOURCES = "MERGE_SOURCES"
     DEDUPLICATE = "DEDUPLICATE"
+    EXECUTE_SQL = "EXECUTE_SQL"
     SUBMIT_PIPELINE = "SUBMIT_PIPELINE"
 
 @dataclass
@@ -57,6 +58,8 @@ class CRMPipelineAction(Action):
     join_key: Optional[str] = None
     conflict_rule: Optional[ConflictRule] = None
     final_source: Optional[str] = Field(None, description="Dataset to submit as the final pipeline result")
+    query: Optional[str] = Field(None, description="Raw SQL query for EXECUTE_SQL action")
+    output_table: Optional[str] = Field(None, description="Table name to write SQL output into")
 
 @dataclass
 class CRMPipelineObservation(Observation):

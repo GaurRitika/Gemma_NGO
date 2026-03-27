@@ -1,0 +1,82 @@
+# Architecture & Pre-Test Audit
+
+## System Flow Diagram
+
+```mermaid
+flowchart TD
+    A["baseline.py (GPT Agent)"] -->|"1. POST /set_task/t1"| B["server/app.py (FastAPI)"]
+    A -->|"2. WebSocket"| C["client.py (EnvClient)"]
+    C -->|"_step_payload / _parse_result"| B
+    B -->|"create_fastapi_app()"| D["server/environment.py"]
+    D -->|"reset()"| E["server/data_generator.py"]
+    E -->|"sources dict"| D
+    E -->|"hidden_truth"| F[("GLOBAL_TRUTH_STORE")]
+    D -->|"LAST_ENV_INSTANCE register"| G[("LAST_ENV_INSTANCE")]
+    A -->|"3. POST /grader/t1"| B
+    B --> G
+    B -->|"grader_func(env)"| H["server/graders.py"]
+    H -->|"get_task_data() re-seed"| E
+    H -->|"pd.merge O(N)"| I["Score 0.0-1.0"]
+    J["openenv.yaml"] -->|"GET /tasks"| B
+    K["models.py"] -->|"Action/Obs/State types"| A
+    K --> C
+    K --> D
+```
+
+---
+
+## File Audit Table
+
+| File | Role | Status | Notes |
+|---|---|---|---|
+| [models.py](file:///C:/Users/ritik/Desktop/CRM-Datapipeline-env/models.py) | Shared types (Action/Obs/State) | ✅ | Added `EXECUTE_SQL`, `query`, `output_table` |
+| [client.py](file:///C:/Users/ritik/Desktop/CRM-Datapipeline-env/client.py) | WebSocket bridge | ✅ | Defensive `.get()` on all parse fields |
+| [server/app.py](file:///C:/Users/ritik/Desktop/CRM-Datapipeline-env/server/app.py) | FastAPI router | ✅ | `subprocess` removed; `/tasks` reads YAML |
+| [server/environment.py](file:///C:/Users/ritik/Desktop/CRM-Datapipeline-env/server/environment.py) | RL game engine | ✅ | Truth in `GLOBAL_TRUTH_STORE`, not on instance |
+| [server/data_generator.py](file:///C:/Users/ritik/Desktop/CRM-Datapipeline-env/server/data_generator.py) | Chaos Engine | ✅ | Bots, None phones, invalid dates, nicknames |
+| [server/graders.py](file:///C:/Users/ritik/Desktop/CRM-Datapipeline-env/server/graders.py) | Score evaluator | ✅ | O(N) vectorized merge, truth re-generated from seed |
+| [baseline.py](file:///c:/Users/ritik/Desktop/CRM-Datapipeline-env/baseline.py) | GPT-4o-mini agent | ✅ | Env-var API key, retries, smart fallback pipeline |
+| [openenv.yaml](file:///C:/Users/ritik/Desktop/CRM-Datapipeline-env/openenv.yaml) | Task manifest | ✅ | 3 tasks with difficulty tags |
+
+---
+
+## Episode Lifecycle
+
+```
+1. baseline.py: POST /set_task/t1          → sets os.environ["CURRENT_TASK_ID"]
+2. client.py: WebSocket connect            → OpenEnv framework calls env.__init__()
+3. env.__init__:                           → LAST_ENV_INSTANCE["t1"] = self
+4. env.reset():
+     data_generator.get_task_data("t1")
+       sources["web_forms"]   ──────────→  agent sees this (dirty data)
+       hidden_truth["web_forms"] ────────→  GLOBAL_TRUTH_STORE["t1"] (NEVER exposed)
+
+5. Agent Loop (max 15 steps):
+     PROFILE_SOURCE         → null counts report
+     STANDARDIZE_COLUMN     → LOWERCASE_STRIP / EXTRACT_NUMBERS / TO_DATETIME_ISO
+     HANDLE_MISSING         → DROP_ROW or FILL_VALUE
+     EXECUTE_SQL            → arbitrary SQL on in-memory SQLite
+     DEDUPLICATE            → EXACT_EMAIL or FUZZY_NAME_PHONE
+     SUBMIT_PIPELINE        → sets done=True
+
+6. baseline.py: POST /grader/t1
+     graders.py fetches LAST_ENV_INSTANCE["t1"]
+     graders.py calls get_task_data("t1") → regenerates truth from Faker seed(101)
+     evaluate_dataframes():
+       pd.merge(truth, agent_output, on="customer_id", how="left")
+       All columns: strip().lower() exact match
+       score = correct_rows/truth - penalty(0.15/extra row)
+```
+
+---
+
+## Pre-Test Risk Flags
+
+> [!IMPORTANT]
+> [reset()](file:///C:/Users/ritik/Desktop/CRM-Datapipeline-env/server/environment.py#46-71) in environment.py reads `os.environ["CURRENT_TASK_ID"]`, NOT the `task_id` argument. Always call `POST /set_task/{id}` **before** the WebSocket connection.
+
+> [!WARNING]
+> Grader regenerates truth with `Faker.seed(101)`. If [data_generator.py](file:///C:/Users/ritik/Desktop/CRM-Datapipeline-env/server/data_generator.py) seed ever changes, grader and environment will produce mismatched datasets and every score will be wrong.
+
+> [!TIP]
+> [grade_task_2](file:///C:/Users/ritik/Desktop/CRM-Datapipeline-env/server/graders.py#60-64) expects `env.get_final_dataframe("merged_output")`. The agent's SQL or MERGE action **must** write to a table named exactly `merged_output`. The T2/T3 smart fallback in [baseline.py](file:///c:/Users/ritik/Desktop/CRM-Datapipeline-env/baseline.py) is not yet implemented — add before final demo.

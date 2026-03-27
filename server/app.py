@@ -1,5 +1,4 @@
 from fastapi import APIRouter
-import subprocess
 import json
 
 try:
