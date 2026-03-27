@@ -161,10 +161,18 @@ class CRMDataPipelineEnv(Environment):
         if strat == StandardizationStrategy.LOWERCASE_STRIP:
             df[col] = df[col].astype(str).str.lower().str.strip()
         elif strat == StandardizationStrategy.EXTRACT_NUMBERS:
-            df[col] = df[col].astype(str).str.replace(r'\D+', '', regex=True)
+            def to_e164(p):
+                if pd.isna(p) or p is None: return ""
+                s = str(p).lower()
+                if 'ext' in s or 'x' in s:
+                    s = s.split('ext')[0].split('x')[0]
+                digits = re.sub(r'\D+', '', s)
+                if not digits: return ""
+                return "+" + digits if not s.startswith("+") else "+" + digits
+            df[col] = df[col].apply(to_e164)
         elif strat == StandardizationStrategy.TO_DATETIME_ISO:
-            # We force it into typical ISO format YYYY-MM-DD string
-            df[col] = pd.to_datetime(df[col], errors='coerce').dt.strftime('%Y-%m-%d')
+            # We force it into typical ISO format YYYY-MM-DD string, invalid dates become empty strings
+            df[col] = pd.to_datetime(df[col], errors='coerce').dt.strftime('%Y-%m-%dT00:00:00').fillna("")
             
         self._last_feedback = f"Standardized {action.source}.{col} using {strat}"
         

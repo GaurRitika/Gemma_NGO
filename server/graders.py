@@ -17,14 +17,17 @@ def grade_task_1(env: CRMDataPipelineEnv) -> float:
             # Simple soft match for hackathon resilience
             if (str(agent_row.get('name', '')).strip() == str(truth_row.get('name', '')).strip() and
                 str(agent_row.get('email', '')).lower().strip() == str(truth_row.get('email', '')).lower().strip() and
-                str(agent_row.get('phone', '')).replace("-", "") == str(truth_row.get('phone', ''))):
+                str(agent_row.get('phone', '')).strip() == str(truth_row.get('phone', '')).strip() and
+                str(agent_row.get('signup_date', '')).strip() == str(truth_row.get('signup_date', '')).strip()):
                 correct_rows += 1
                 
-    score = correct_rows / len(truth_df)
+    # Severe penalty for leaving in bots or duplicates to prevent blind exploits
+    penalty = max(0, len(final_df) - len(truth_df)) * 0.15
+    score = (correct_rows / len(truth_df)) - penalty
     return min(1.0, max(0.0, score))
 
 def grade_task_2(env: CRMDataPipelineEnv) -> float:
-    final_df = env.get_final_dataframe("legacy_db")
+    final_df = env.get_final_dataframe("merged_output")
     truth_df = env.get_ground_truth()
     
     if final_df.empty or truth_df is None:
@@ -39,7 +42,8 @@ def grade_task_2(env: CRMDataPipelineEnv) -> float:
                 correct_rows += 1
                 
     score = correct_rows / len(truth_df)
-    penalty = max(0, len(final_df) - len(truth_df)) * 0.1
+    # Severe penalty for leaving in bots or duplicates to prevent blind exploits
+    penalty = max(0, len(final_df) - len(truth_df)) * 0.15
     return min(1.0, max(0.0, score - penalty))
 
 def grade_task_3(env: CRMDataPipelineEnv) -> float:
@@ -59,7 +63,9 @@ def grade_task_3(env: CRMDataPipelineEnv) -> float:
                 correct += 1
                 
     score = correct / len(truth_df)
-    return min(1.0, max(0.0, score))
+    # Severe penalty for leaving in bots or duplicates to prevent blind exploits
+    penalty = max(0, len(final_df) - len(truth_df)) * 0.15
+    return min(1.0, max(0.0, score - penalty))
     
 def get_grader(task_id: str):
     return {"t1": grade_task_1, "t2": grade_task_2, "t3": grade_task_3}.get(task_id)
