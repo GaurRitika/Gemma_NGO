@@ -34,6 +34,12 @@ docker run -p 8080:8080 crm-env
 ### Baseline Inference Test
 Validates the local container and deterministic task grader by attempting all 3 tasks (Easy, Medium, Hard).
 ```bash
-# Requires local container running
-python baseline.py
+# Requires local server running
+python inference.py
 ```
+
+### Baseline Scores
+Based on the default inference script baseline tests:
+- **Task 1 (Easy):** 1.0 / 1.0
+- **Task 2 (Medium):** 1.0 / 1.0
+- **Task 3 (Hard):** 1.0 / 1.0

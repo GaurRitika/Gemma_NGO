@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crm-data-pipeline-env"
+version = "0.1.0"
+description = "CRM Data Pipeline Environment for OpenEnv Hackathon"
+authors = [{name = "Ritika", email = "ritika.gaur2005@gmail.com"}]
+dependencies = [
+    "openenv-core>=0.1.0",
+    "pandas>=2.0.0",
+    "pydantic>=2.0.0",
+    "faker>=20.0.0",
+    "openai>=1.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.20.0"
+]
+
+[project.scripts]
+server = "server.app:main"
+
