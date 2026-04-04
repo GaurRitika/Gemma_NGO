@@ -9,6 +9,7 @@ import os
 import json
 import time
 import requests
+from typing import List, Optional
 from dotenv import load_dotenv
 from openai import OpenAI, RateLimitError, APIError
 from client import CRMDataPipelineEnvClient
@@ -21,12 +22,12 @@ load_dotenv()
 # SECURITY: API key is ONLY read from environment variables.
 # If missing, we raise immediately rather than silently failing.
 # ============================================================
-HF_TOKEN = os.environ.get("HF_TOKEN") or os.environ.get("OPENAI_API_KEY")
-API_BASE_URL = os.environ.get("API_BASE_URL")
-MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-4o-mini")
+API_BASE_URL = os.getenv("API_BASE_URL", "<your-active-model-base-url>")
+MODEL_NAME = os.getenv("MODEL_NAME", "<your-active-model-name>")
+HF_TOKEN = os.getenv("HF_TOKEN")
 
-if not HF_TOKEN:
-    raise EnvironmentError("HF_TOKEN (or OPENAI_API_KEY) is not set.")
+# Optional - if you use from_docker_image():
+LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
 
 openai_client = OpenAI(
     api_key=HF_TOKEN,
@@ -55,6 +56,22 @@ Rules:
 3. For multi-source tasks (T2, T3) use EXECUTE_SQL to JOIN or UNION sources.
 4. Remove bot/outlier rows using EXECUTE_SQL with WHERE filters on customer_id or email.
 """
+
+def log_start(task: str, env: str, model: str) -> None:
+    print(f"[START] task={task} env={env} model={model}", flush=True)
+
+def log_step(step: int, action: str, reward: float, done: bool, error: Optional[str]) -> None:
+    error_val = error if error else "null"
+    done_val = str(done).lower()
+    print(
+        f"[STEP] step={step} action={action} reward={reward:.2f} done={done_val} error={error_val}",
+        flush=True,
+    )
+
+def log_end(success: bool, steps: int, rewards: List[float]) -> None:
+    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    print(f"[END] success={str(success).lower()} steps={steps} rewards={rewards_str}", flush=True)
+
 
 def build_user_prompt(obs, steps_remaining: int, task_id: str) -> str:
     return f"""
@@ -94,13 +111,13 @@ def call_gpt_with_retry(prompt: str, max_retries: int = 3) -> dict | None:
             return json.loads(raw)
         except RateLimitError:
             wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
-            print(f"  [GPT] Rate limit hit. Retrying in {wait_time}s...")
+            print(f"[DEBUG] [GPT] Rate limit hit. Retrying in {wait_time}s...", flush=True)
             time.sleep(wait_time)
         except APIError as e:
-            print(f"  [GPT] API Error on attempt {attempt + 1}: {e}")
+            print(f"[DEBUG] [GPT] API Error on attempt {attempt + 1}: {e}", flush=True)
             time.sleep(1)
         except json.JSONDecodeError as e:
-            print(f"  [GPT] JSON decode failed: {e}")
+            print(f"[DEBUG] [GPT] JSON decode failed: {e}", flush=True)
             return None
     return None
 
@@ -158,11 +175,11 @@ def validate_action(payload: dict) -> CRMPipelineAction | None:
     try:
         action_type_val = payload.get("action_type", "")
         if not action_type_val or action_type_val not in [e.value for e in PipelineActionType]:
-            print(f"  [WARN] Invalid action_type: {action_type_val!r}")
+            print(f"[DEBUG] [WARN] Invalid action_type: {action_type_val!r}", flush=True)
             return None
         return CRMPipelineAction(**payload)
     except Exception as e:
-        print(f"  [WARN] Action validation failed: {e}")
+        print(f"[DEBUG] [WARN] Action validation failed: {e}", flush=True)
         return None
 
 
@@ -175,18 +192,12 @@ class RuleBasedBaseline:
         return build_smart_fallback(obs, step, self.task_id)
 
 def run_task(task_id: str, use_llm: bool = True) -> float:
-    """
-    Run the baseline agent on a single task.
-
-    Parameters
-    ----------
-    task_id : 't1' | 't2' | 't3'
-    use_llm : If True, call GPT; fall back to rule-based on failure.
-              If False, always use the deterministic rule-based baseline.
-    """
     base_url = os.environ.get("OPENENV_BASE_URL", "http://127.0.0.1:8080")
-    print(f"\n--- Starting Baseline Inference for Task {task_id} (LLM={use_llm}) ---")
+    
     score = 0.0
+    rewards = []
+    
+    log_start(task=task_id, env="crm_data_pipeline", model=MODEL_NAME)
 
     try:
         with CRMDataPipelineEnvClient(base_url=base_url).sync() as env:
@@ -194,7 +205,6 @@ def run_task(task_id: str, use_llm: bool = True) -> float:
             done = False
             steps = 0
             
-            # Extract episode_id for grader
             episode_id = None
             if getattr(env, "state", None) and getattr(env.state, "episode_id", None):
                 episode_id = env.state.episode_id
@@ -210,6 +220,7 @@ def run_task(task_id: str, use_llm: bool = True) -> float:
             action = None
 
             while not done and steps < MAX_STEPS_PER_TASK:
+                steps += 1
                 obs = result.observation
                 steps_remaining = MAX_STEPS_PER_TASK - steps
                 
@@ -222,17 +233,37 @@ def run_task(task_id: str, use_llm: bool = True) -> float:
 
                 if action is None:
                     if use_llm:
-                        print(f"  [FALLBACK] Step {steps}: using smart fallback pipeline")
-                    payload = agent.act(obs, steps)
+                        print(f"[DEBUG] [FALLBACK] Step {steps}: using smart fallback pipeline", flush=True)
+                    payload = agent.act(obs, steps - 1)
                     action = validate_action(payload)
 
                 if action is None:
                     break
 
-                print(f"  Step {steps}: {action.action_type.value}")
+                # Prepare action string for logging
+                if isinstance(action, CRMPipelineAction):
+                    action_dict = {
+                        k: v for k, v in action.__dict__.items() if v is not None
+                    }
+                    action_str = json.dumps(action_dict).replace("\n", "").replace("\r", "")
+                else:
+                    action_str = "unknown"
+
                 result = env.step(action)
                 done = result.done
-                steps += 1
+                
+                # We record the reward for this step
+                reward = result.reward if result.reward is not None else 0.0
+                rewards.append(reward)
+                
+                # Check for errors
+                error_msg = getattr(result.observation, "last_action_feedback", None)
+                if error_msg and error_msg.startswith("Error:"):
+                    error = error_msg
+                else:
+                    error = None
+                    
+                log_step(step=steps, action=action_str, reward=reward, done=done, error=error)
 
             # Fetch final graded score using OpenEnv grading standard via HTTP REST
             if episode_id:
@@ -245,21 +276,24 @@ def run_task(task_id: str, use_llm: bool = True) -> float:
                     resp.raise_for_status()
                     score = resp.json().get("score", 0.0)
                 except Exception as e:
-                    print(f"  [ERROR] Grader REST Error: {e}")
+                    print(f"[DEBUG] Grader REST Error: {e}", flush=True)
             else:
-                print("  [WARN] Fallback heuristic score used (no episode_id found).")
+                print("[DEBUG] Fallback heuristic score used (no episode_id found).", flush=True)
                 score = result.reward if result else 0.0
 
-            print(f"  Final Score [{task_id}]: {score:.4f}")
+            print(f"[DEBUG] Final Score [{task_id}]: {score:.4f}", flush=True)
 
     except Exception as e:
         if "1000 (OK)" not in str(e):
-            print(f"  [ERROR] Runtime Exception in task {task_id}: {e}")
+            print(f"[DEBUG] Runtime Exception in task {task_id}: {e}", flush=True)
         else:
-            print(f"  [INFO] Connection cleanly closed.")
+            print(f"[DEBUG] Connection cleanly closed.", flush=True)
 
+    # Determine success threshold (we can assume score > 0 means some success)
+    success = score > 0.5
+    log_end(success=success, steps=steps, rewards=rewards)
+    
     return score
-
 
 if __name__ == "__main__":
     results = {}
@@ -267,5 +301,5 @@ if __name__ == "__main__":
         results[task_id] = run_task(task_id, use_llm=False)
 
     results["average"] = sum(results.values()) / 3
-    print("\n=== Final Scores ===")
-    print(json.dumps(results, indent=2))
+    print("[DEBUG] === Final Scores ===", flush=True)
+    print("[DEBUG] " + json.dumps(results).replace("\n", ""), flush=True)

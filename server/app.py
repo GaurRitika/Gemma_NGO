@@ -21,24 +21,7 @@ router = APIRouter()
 def read_root():
     return {"status": "ok", "message": "CRM Pipeline Environment is running."}
 
-# ---------------------------------------------------------------------------
-# /tasks  — static task catalogue
-# ---------------------------------------------------------------------------
-@router.get("/tasks")
-def list_tasks():
-    with open("openenv.yaml", "r") as f:
-        config = yaml.safe_load(f)
-        return {
-            "tasks": config.get("tasks", []),
-            "action_schema": {
-                "action_type": "string",
-                "source": "string",
-                "column": "string",
-                "standardization_strategy": "string",
-                "deduplication_strategy": "string",
-                "final_source": "string"
-            }
-        }
+
 
 # ---------------------------------------------------------------------------
 # /grader/{episode_id}  — grade a completed episode
@@ -94,26 +77,7 @@ def grade_episode(episode_id: str, final_source: str, task_id: str):
         "rows": len(agent_df)
     }
 
-# ---------------------------------------------------------------------------
-# /baseline  — DEMO ONLY, not part of core evaluation
-# Lazy import keeps baseline.py failures from crashing the server on startup.
-# ---------------------------------------------------------------------------
-@router.get("/baseline")
-def run_baseline():
-    """
-    DEMO ENDPOINT — runs the baseline inference script against all 3 tasks.
-    Not required for OpenEnv evaluation. May add latency due to LLM calls.
-    """
-    try:
-        from inference import run_task   # lazy import — do not couple to server startup
-        t1 = run_task("t1", use_llm=False)
-        t2 = run_task("t2", use_llm=False)
-        t3 = run_task("t3", use_llm=False)
-        return {"demo": True, "scores": {"t1": t1, "t2": t2, "t3": t3}}
-    except ImportError:
-        raise HTTPException(status_code=501, detail="inference.py not available.")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+
 
 app.include_router(router)
 
