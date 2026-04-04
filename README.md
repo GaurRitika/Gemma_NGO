@@ -42,7 +42,7 @@ graph TD
     D -- 4. Return Observation --> A
     
     A -- 5. SUBMIT_PIPELINE --> F[Grader Engine]:::sys
-    E[(Ground Truth)]:::sys -.->|6. Compare| F
+    E[(Ground Truth)]:::sys -. Compare .-> F
     F -- 7. Final Score --> G[Result (0.0 - 1.0)]:::output
 ```
 
