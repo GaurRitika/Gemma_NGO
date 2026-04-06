@@ -1,5 +1,12 @@
 from fastapi import APIRouter, HTTPException
 
+   #Purpose of this file: 
+#1.Converting the environment to an API
+#2.Adding a custom endpoint named /grader
+
+#Fast api + wrapper setup
+# like if open env is installed then real wrapper will be used else dummy wrapper will be used
+
 try:
     from openenv.core.env_server import create_fastapi_app
 except ImportError:
@@ -10,25 +17,33 @@ import yaml
 import server.environment as env_mod
 print(f"DEBUG: env_mod path: {env_mod.__file__}")
 
+
+#now here we are importing the environment , grader , and models
 from server.environment import CRMDataPipelineEnv, GLOBAL_TRUTH_STORE, GLOBAL_ENV_STORE
 from server.graders import get_grader, evaluate_dataframes
 from models import CRMPipelineAction, CRMPipelineObservation
 
+# i made endpoint likes /reset, /step, /grader/{episode_id}
+# these are the endpoints that will be called by the agent
 app = create_fastapi_app(CRMDataPipelineEnv, CRMPipelineAction, CRMPipelineObservation)
 router = APIRouter()
 
+# i made a simple endpoint to check if the server is running - health check
 @router.get("/")
 def read_root():
     return {"status": "ok", "message": "CRM Pipeline Environment is running."}
 
 
 
-# ---------------------------------------------------------------------------
 # /grader/{episode_id}  — grade a completed episode
 # Uses the truth snapshot stored at reset() time, keyed by episode_id.
 # Works across concurrent agents — no global env pointer needed.
-# ---------------------------------------------------------------------------
+
 @router.post("/grader/{episode_id}")
+# here we are taking the episode_id , final_source , and task_id as the parameters
+# episode_id is the id of the episode
+# final_source is the name of the dataframe the agent submitted
+# task_id is the id of the task
 def grade_episode(episode_id: str, final_source: str, task_id: str):
     """
     Grade a completed episode.
@@ -39,7 +54,9 @@ def grade_episode(episode_id: str, final_source: str, task_id: str):
     final_source : name of the dataframe the agent submitted
     task_id      : t1 | t2 | t3  (needed to select the correct truth key)
     """
+    # here we are taking the truth map from the global truth store
     truth_map = GLOBAL_TRUTH_STORE.get(episode_id)
+    # if the truth map is not found , then we are raising an exception
     if not truth_map:
         raise HTTPException(
             status_code=404,

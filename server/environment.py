@@ -36,30 +36,33 @@ import sqlite3
 # GLOBAL_TRUTH_STORE: keyed by episode_id (uuid), NOT task_id
 # This gives each episode its own isolated truth snapshot.
 # Graders retrieve truth via episode_id stored in CRMPipelineState.
-GLOBAL_TRUTH_STORE: dict = {}
-GLOBAL_ENV_STORE: dict = {}
+GLOBAL_TRUTH_STORE: dict = {} #stores correct answers for each episode
+GLOBAL_ENV_STORE: dict = {} #stores env instances for each episode
 
+# here we are defining the environment class
 class CRMDataPipelineEnv(Environment):
     MIN_STEPS_BEFORE_SUBMIT = 3
 
+    # here we are defining the init method
     def __init__(self, **kwargs):
         # task_id is set per-episode in reset(), not from env var
-        self._task_id = "t1"
+        self._task_id = "t1" #default task id
         self._state = CRMPipelineState(episode_id=None, step_count=0, task_id=self._task_id)
-        self._sources: Dict[str, pd.DataFrame] = {}
-        self._schema_target: Dict[str, str] = {}
-        self._conflict_rules: Dict[str, str] = {}
-        self._current_view = "No source loaded yet."
-        self._last_feedback = ""
-        self._report = ""
-        self._last_action = None
-        self._final_source_name: str = ""
-        self.final_df = None
+        self._sources: Dict[str, pd.DataFrame] = {} #stores the source dataframes
+        self._schema_target: Dict[str, str] = {} #stores the target schema
+        self._conflict_rules: Dict[str, str] = {} #stores the conflict rules
+        self._current_view = "No source loaded yet." #stores the current view
+        self._last_feedback = "" #stores the last feedback
+        self._report = "" #stores the report
+        self._last_action = None #stores the last action
+        self._final_source_name: str = "" #stores the final source name
+        self.final_df = None #stores the final dataframe
 
+    # here we are defining the reset method
     def reset(self, task_id: str = "t1") -> "CRMStepResult":
-        print(f"DEBUG: CRMStepResult type in reset: {CRMStepResult} (id: {id(CRMStepResult)})")
-        self._task_id = task_id
-        task_data = get_task_data(task_id)
+        print(f"DEBUG: CRMStepResult type in reset: {CRMStepResult} (id: {id(CRMStepResult)})") #debug print
+        self._task_id = task_id #set the task id
+        task_data = get_task_data(task_id) #get the task data
         
         # Clone source frames so mutations don't bleed across episodes
         self._sources = {k: v.copy() for k, v in task_data["sources"].items()}
@@ -67,33 +70,36 @@ class CRMDataPipelineEnv(Environment):
         
         episode_id = str(uuid.uuid4())
         
+            
         # Key truth by episode_id → each concurrent agent gets its own snapshot
         GLOBAL_TRUTH_STORE[episode_id] = {k: v.copy() for k, v in task_data["hidden_truth"].items()}
         GLOBAL_ENV_STORE[episode_id] = self
         
-        self.final_df = None
-        self._schema_target = task_data["schema"]
-        self._conflict_rules = task_data.get("conflict_rules", {})
+        self.final_df = None #stores the final dataframe
+        self._schema_target = task_data["schema"] #stores the target schema
+        self._conflict_rules = task_data.get("conflict_rules", {}) #stores the conflict rules
         
         self._state = CRMPipelineState(
             episode_id=episode_id,
-            step_count=0,
+            step_count=0, #step count
             task_id=task_id
         )
         
         self._current_view = "Select a source to view."
         self._last_feedback = f"Environment reset for task {task_id}. Episode: {episode_id}"
-        self._report = None
+        self._report = None 
         self._last_action = None
         
-        obs = self._build_observation(done=False, reward=0.0)
+        obs = self._build_observation(done=False, reward=0.0) 
         return CRMStepResult(observation=obs, reward=0.0, done=False)
         
-    def step(self, action: CRMPipelineAction) -> "CRMStepResult":
-        self._state.step_count += 1
-        reward = 0.0
-        done = False
-        self._last_action = action
+
+         #here we are defining the step method
+    def step(self, action: CRMPipelineAction) -> "CRMStepResult": 
+        self._state.step_count += 1 #increment the step count
+        reward = 0.0 #initialize the reward
+        done = False #initialize the done flag
+        self._last_action = action #store the last action
         
         try:
             if action.action_type == PipelineActionType.VIEW_SOURCE:
@@ -107,7 +113,7 @@ class CRMDataPipelineEnv(Environment):
                 reward += self._handle_missing(action)
             elif action.action_type == PipelineActionType.DEDUPLICATE:
                 reward += self._handle_deduplicate(action)
-            elif action.action_type == PipelineActionType.MERGE_SOURCES:
+            elif action.action_type == PipelineActionType.MERGE_SOURCES: 
                 reward += self._handle_merge(action)
             elif action.action_type == PipelineActionType.EXECUTE_SQL:
                 reward += self._handle_sql(action)
@@ -141,13 +147,15 @@ class CRMDataPipelineEnv(Environment):
     async def step_async(self, action: CRMPipelineAction) -> "CRMStepResult":
         return self.step(action=action)
         
+
+    #here we are defining the build observation method
     def _build_observation(self, done: bool, reward: float) -> CRMPipelineObservation:
         objective = {
             "t1": "Normalize web_forms dataset",
             "t2": "Deduplicate legacy_db dataset",
             "t3": "Merge Salesforce, Web Leads, Legacy databases"
         }.get(self._task_id, "Unknown task")
-        
+         #here we are returning the observation
         return CRMPipelineObservation(
             done=done,
             reward=reward,
