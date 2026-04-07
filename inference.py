@@ -24,7 +24,7 @@ load_dotenv()
 # ============================================================
 API_BASE_URL = os.getenv("API_BASE_URL", "<your-active-model-base-url>")
 MODEL_NAME = os.getenv("MODEL_NAME", "<your-active-model-name>")
-API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY", "dummy_key")
+API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN", "dummy_key")
 # Optional - if you use from_docker_image():
 LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
 
