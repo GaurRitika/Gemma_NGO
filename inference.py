@@ -22,9 +22,9 @@ load_dotenv()
 # SECURITY: API key is ONLY read from environment variables.
 # If missing, we raise immediately rather than silently failing.
 # ============================================================
-API_BASE_URL = os.getenv("API_BASE_URL", "<your-active-model-base-url>")
+API_BASE_URL = os.environ["API_BASE_URL"]
 MODEL_NAME = os.getenv("MODEL_NAME", "<your-active-model-name>")
-API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN", "dummy_key")
+API_KEY = os.environ["API_KEY"]
 # Optional - if you use from_docker_image():
 LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
 
@@ -67,9 +67,9 @@ def log_step(step: int, action: str, reward: float, done: bool, error: Optional[
         flush=True,
     )
 
-def log_end(success: bool, steps: int, rewards: List[float]) -> None:
+def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> None:
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
-    print(f"[END] success={str(success).lower()} steps={steps} rewards={rewards_str}", flush=True)
+    print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
 
 
 def build_user_prompt(obs, steps_remaining: int, task_id: str) -> str:
@@ -200,7 +200,8 @@ def run_task(task_id: str, use_llm: bool = True) -> float:
 
     try:
         with CRMDataPipelineEnvClient(base_url=base_url).sync() as env:
-            result = env.reset(task_id=task_id)
+            os.environ["TASK_ID"] = task_id
+            result = env.reset()
             done = False
             steps = 0
             
@@ -264,21 +265,8 @@ def run_task(task_id: str, use_llm: bool = True) -> float:
                     
                 log_step(step=steps, action=action_str, reward=reward, done=done, error=error)
 
-            # Fetch final graded score using OpenEnv grading standard via HTTP REST
-            if episode_id:
-                final_src = getattr(action, "final_source", "merged_output") if action else "merged_output"
-                try:
-                    resp = requests.post(
-                        f"{base_url.replace('ws://', 'http://')}/grader/{episode_id}",
-                        params={"final_source": final_src, "task_id": task_id}
-                    )
-                    resp.raise_for_status()
-                    score = resp.json().get("score", 0.0)
-                except Exception as e:
-                    print(f"[DEBUG] Grader REST Error: {e}", flush=True)
-            else:
-                print("[DEBUG] Fallback heuristic score used (no episode_id found).", flush=True)
-                score = result.reward if result else 0.0
+            score = result.reward if result and result.done else 0.0
+            score = float(score) if score else 0.0
 
             print(f"[DEBUG] Final Score [{task_id}]: {score:.4f}", flush=True)
 
@@ -290,7 +278,7 @@ def run_task(task_id: str, use_llm: bool = True) -> float:
 
     # Determine success threshold (we can assume score > 0 means some success)
     success = score > 0.5
-    log_end(success=success, steps=steps, rewards=rewards)
+    log_end(success=success, steps=steps, score=score, rewards=rewards)
     
     return score
 
