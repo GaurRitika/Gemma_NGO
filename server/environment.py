@@ -59,7 +59,8 @@ class CRMDataPipelineEnv(Environment):
         self.final_df = None #stores the final dataframe
 
     # here we are defining the reset method
-    def reset(self, task_id: str = "t1") -> "CRMStepResult":
+    def reset(self) -> "CRMStepResult":
+        task_id = os.environ.get("TASK_ID", "t1")
         print(f"DEBUG: CRMStepResult type in reset: {CRMStepResult} (id: {id(CRMStepResult)})") #debug print
         self._task_id = task_id #set the task id
         task_data = get_task_data(task_id) #get the task data
@@ -141,8 +142,8 @@ class CRMDataPipelineEnv(Environment):
         obs = self._build_observation(done=done, reward=reward)
         return CRMStepResult(observation=obs, reward=reward, done=done)
         
-    async def reset_async(self, task_id: str = "t1") -> "CRMStepResult":
-        return self.reset(task_id=task_id)
+    async def reset_async(self) -> "CRMStepResult":
+        return self.reset()
         
     async def step_async(self, action: CRMPipelineAction) -> "CRMStepResult":
         return self.step(action=action)
