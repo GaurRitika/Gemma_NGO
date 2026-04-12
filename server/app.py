@@ -1,11 +1,10 @@
 from fastapi import APIRouter, HTTPException
 
-   #Purpose of this file: 
-#1.Converting the environment to an API
-#2.Adding a custom endpoint named /grader
-
-#Fast api + wrapper setup
-# like if open env is installed then real wrapper will be used else dummy wrapper will be used
+"""
+Server bootstrap for the CRM Data Pipeline OpenEnv Environment.
+Provides REST APIs for standard OpenEnv protocol (/step, /reset, /state) 
+as well as a custom /grader endpoint specifically built for end-of-episode evaluation.
+"""
 
 try:
     from openenv.core.env_server import create_fastapi_app
@@ -17,72 +16,60 @@ import yaml
 import server.environment as env_mod
 print(f"DEBUG: env_mod path: {env_mod.__file__}")
 
-
-#now here we are importing the environment , grader , and models
 from server.environment import CRMDataPipelineEnv, GLOBAL_TRUTH_STORE, GLOBAL_ENV_STORE
 from server.graders import get_grader, evaluate_dataframes
 from models import CRMPipelineAction, CRMPipelineObservation
 
-# i made endpoint likes /reset, /step, /grader/{episode_id}
-# these are the endpoints that will be called by the agent
+
 app = create_fastapi_app(CRMDataPipelineEnv, CRMPipelineAction, CRMPipelineObservation)
 router = APIRouter()
 
-# i made a simple endpoint to check if the server is running - health check
 @router.get("/")
 def read_root():
-    return {"status": "ok", "message": "CRM Pipeline Environment is running."}
+    """Health check endpoint to ensure server runtime stability."""
+    return {"status": "ok", "message": "CRM Pipeline Environment is actively running."}
 
-
-
-# /grader/{episode_id}  — grade a completed episode
-# Uses the truth snapshot stored at reset() time, keyed by episode_id.
-# Works across concurrent agents — no global env pointer needed.
 
 @router.post("/grader/{episode_id}")
-# here we are taking the episode_id , final_source , and task_id as the parameters
-# episode_id is the id of the episode
-# final_source is the name of the dataframe the agent submitted
-# task_id is the id of the task
 def grade_episode(episode_id: str, final_source: str, task_id: str):
     """
-    Grade a completed episode.
+    Grades a completed episodic run by comparing the agent's final state 
+    against the pristine Ground Truth snapshot securely cached during initialization.
 
     Parameters
     ----------
-    episode_id   : the UUID returned in the observation after reset()
-    final_source : name of the dataframe the agent submitted
-    task_id      : t1 | t2 | t3  (needed to select the correct truth key)
+    episode_id   : Unique UUID isolating the agent's session memory.
+    final_source : The DataFrame pointer representing the agent's submitted work.
+    task_id      : Difficulty identifier ('t1', 't2', 't3') used to fetch correct truth schema.
     """
-    # here we are taking the truth map from the global truth store
+    
     truth_map = GLOBAL_TRUTH_STORE.get(episode_id)
-    # if the truth map is not found , then we are raising an exception
+    
     if not truth_map:
         raise HTTPException(
             status_code=404,
-            detail=f"No truth snapshot found for episode_id='{episode_id}'. "
-                   "Make sure to call reset() before grading."
+            detail=f"No underlying truth snapshot found for episode_id='{episode_id}'. "
+                   "Ensure /reset is called explicitly before invoking the grader engine."
         )
 
-    # Pick the right truth key per task
+    # Establish correct truth reference mapping based on task complexity
     truth_key = {"t1": "web_forms", "t2": "merged_output", "t3": "merged_output"}.get(task_id)
     if truth_key is None:
-        raise HTTPException(status_code=400, detail=f"Unknown task_id '{task_id}'")
+        raise HTTPException(status_code=400, detail=f"Unrecognized task_id constraint '{task_id}'.")
 
     truth_df = truth_map.get(truth_key)
     if truth_df is None:
-        raise HTTPException(status_code=500, detail=f"Truth key '{truth_key}' missing from snapshot.")
+        raise HTTPException(status_code=500, detail=f"Target truth key '{truth_key}' is missing from the state snapshot.")
 
-    # Get env instance safely
     env = GLOBAL_ENV_STORE.get(episode_id)
     if not env:
-        raise HTTPException(status_code=404, detail="Environment instance not found")
+        raise HTTPException(status_code=404, detail="Environment instance allocation not found in active memory.")
         
     agent_df = env.final_df
     if agent_df is None:
         raise HTTPException(
             status_code=400, 
-            detail="Agent has not submitted a final dataframe yet."
+            detail="The active agent has not materialized a final dataframe for submission."
         )
 
     score = evaluate_dataframes(truth_df, agent_df)
@@ -95,10 +82,10 @@ def grade_episode(episode_id: str, final_source: str, task_id: str):
     }
 
 
-
 app.include_router(router)
 
 def main():
+    """Entrypoint bound for Docker and local WSGI invocation."""
     import uvicorn
     uvicorn.run("server.app:app", host="0.0.0.0", port=8080)
 
