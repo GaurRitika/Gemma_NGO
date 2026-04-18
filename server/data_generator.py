@@ -10,21 +10,21 @@ random.seed(None)
 
 # Conflict resolution priority rules for hard task
 CONFLICT_RULES = {
-    "email":  "prefer_salesforce",   # SF email is canonical
-    "phone":  "prefer_web_leads",    # Web leads has fresher phone data
-    "customer_id": "prefer_salesforce",
+    "email":  "prefer_volunteer_portal",   # Portal email is canonical
+    "phone":  "prefer_donation_forms",    # Donation forms has fresher phone data
+    "donor_id": "prefer_volunteer_portal",
 }
 
-_BOT_DOMAINS = ["promo-alerts.net", "click-rewards.xyz", "freewinners.info", "bulk-mail.co"]
-_BOT_NAMES   = ["Support Team", "Newsletter Bot", "Promo Sender", "Deals Alert"]
+_MISTAKE_DOMAINS = ["unverified-entry.local", "offline-form.temp", "no-email.xyz", "placeholder.co"]
+_MISTAKE_NAMES   = ["Unknown Volunteer", "Missing Name", "Temp Entry", "TBD Info"]
 
 def generate_bot_row():
-    """Realistic-looking bot row with subtle anomalies (bulk domain, sequential-ish ID, bad phone)."""
+    """Realistic-looking messy/anomaly row with subtle anomalies (bad domain, sequential-ish ID, bad phone)."""
     local = fake.user_name() + str(random.randint(1, 99))          # e.g.  john42
-    domain = random.choice(_BOT_DOMAINS)                           # shady domain
+    domain = random.choice(_MISTAKE_DOMAINS)                           # shady domain
     return {
-        "customer_id": f"BOT{random.randint(10000, 99999)}",        # looks like an ID but BOT prefix
-        "name":        random.choice(_BOT_NAMES),
+        "donor_id": f"TEMP{random.randint(10000, 99999)}",        # looks like an ID but TEMP prefix
+        "name":        random.choice(_MISTAKE_NAMES),
         "email":       f"{local}@{domain}",                        # valid format, bad domain
         "signup_date": "1970-01-01",                               # epoch date — suspicious
         "phone":       "+" + "0" * 11                              # all-zeros phone
@@ -78,7 +78,7 @@ def create_base_truth(size=50):
     truth = []
     for i in range(size):
         truth.append({
-            "customer_id": f"CUST_{1000+i}",
+            "donor_id": f"DONOR_{1000+i}",
             "name": fake.name(),
             "email": fake.email().lower(),
             "signup_date": fake.date_this_decade().isoformat(),
@@ -98,10 +98,10 @@ def generate_easy_task():
     random.shuffle(messy_rows)
     
     return {
-        "sources": {"web_forms": pd.DataFrame(messy_rows)},
-        "hidden_truth": {"web_forms": pd.DataFrame(truth)},
+        "sources": {"donation_forms": pd.DataFrame(messy_rows)},
+        "hidden_truth": {"donation_forms": pd.DataFrame(truth)},
         "schema": {
-            "customer_id": "string",
+            "donor_id": "string",
             "name": "string (stripped)",
             "email": "string (lowercase, stripped)",
             "signup_date": "string ISO 8601 or empty",
@@ -112,7 +112,7 @@ def generate_easy_task():
 def generate_medium_task():
     """Task 2: 2 data sources with severe duplicates and missing data."""
     t1 = generate_easy_task()
-    df_truth = t1["hidden_truth"]["web_forms"].copy()
+    df_truth = t1["hidden_truth"]["donation_forms"].copy()
     
     # Second chaotic source
     truth2 = create_base_truth(20)
@@ -122,26 +122,20 @@ def generate_medium_task():
     df_truth = pd.concat([df_truth, pd.DataFrame(truth2)]).drop_duplicates(subset=["email"]).reset_index(drop=True)
     
     return {
-        "sources": {"legacy_db": pd.DataFrame(messy2).sample(frac=1).reset_index(drop=True), "web_forms": t1["sources"]["web_forms"]},
+        "sources": {"legacy_ngo_db": pd.DataFrame(messy2).sample(frac=1).reset_index(drop=True), "donation_forms": t1["sources"]["donation_forms"]},
         "hidden_truth": {"merged_output": df_truth},
         "schema": t1["schema"]
     }
 
 def _apply_conflict_rules(truth_list):
     """
-    Build per-customer ground truth by applying CONFLICT_RULES priority logic.
-    Priority order: Salesforce > Web Leads > Legacy DB.
+    Build per-donor ground truth by applying CONFLICT_RULES priority logic.
+    Priority order: Volunteer Portal > Donation Forms > Legacy NGO DB.
     """
     resolved = []
     for r in truth_list:
         # Start with base truth values
-        row = {"customer_id": r["customer_id"], "email": r["email"], "phone": r["phone"]}
-
-        # email: prefer_salesforce — already the canonical value in r
-        # phone: prefer_web_leads — web_leads has "fresh" data so we keep r["phone"]
-        #   (we will inject a slightly different phone in web_leads below,
-        #    but the *resolved* phone is what web_leads would provide when present)
-        #   Hidden truth simply records the rule outcome.
+        row = {"donor_id": r["donor_id"], "email": r["email"], "phone": r["phone"]}
         resolved.append(row)
     return resolved
 
@@ -149,72 +143,70 @@ def generate_hard_task():
     """Task 3: 3-way merge conflict with full chaos engine and explicit conflict rules."""
     truth = create_base_truth(60)
 
-    salesforce = []
-    web_leads  = []
+    volunteer_portal = []
+    donation_forms  = []
     legacy     = []
 
-    # web_leads_phones maps customer_id -> fresh phone used in web_leads
+    # donation_forms_phones maps donor_id -> fresh phone used in donation_forms
     wl_phones = {}
 
     for r in truth:
-        # --- Salesforce: canonical email, mostly reliable phone ---
+        # --- Volunteer Portal: canonical email, mostly reliable phone ---
         sf_phone = r["phone"] if random.random() > 0.3 else None
-        salesforce.append({"customer_id": r["customer_id"], "email": r["email"], "phone": sf_phone})
+        volunteer_portal.append({"donor_id": r["donor_id"], "email": r["email"], "phone": sf_phone})
 
-        # --- Web Leads: fresh phone (different from SF), missing ID ~20% ---
+        # --- Donation Forms: fresh phone (different from Portal), missing ID ~20% ---
         fresh_phone = "+" + fake.msisdn()                           # intentionally different
-        wl_phones[r["customer_id"]] = fresh_phone                  # remember for truth building
-        wl_cid  = r["customer_id"] if random.random() > 0.2 else None
+        wl_phones[r["donor_id"]] = fresh_phone                  # remember for truth building
+        wl_cid  = r["donor_id"] if random.random() > 0.2 else None
         wl_ph   = fresh_phone if random.random() > 0.4 else None   # sometimes missing
-        web_leads.append({"customer_id": wl_cid, "email": r["email"], "phone": wl_ph})
+        donation_forms.append({"donor_id": wl_cid, "email": r["email"], "phone": wl_ph})
 
-        # --- Legacy DB: old ID format, uppercased email, old phone ---
-        old_cid = r["customer_id"].replace("CUST_", "OLD-") if r["customer_id"] else None
+        # --- Legacy NGO DB: old ID format, uppercased email, old phone ---
+        old_cid = r["donor_id"].replace("DONOR_", "OLD-") if r["donor_id"] else None
         legacy.append({
             "legacy_id":     old_cid,
             "contact_email": r["email"].upper() if r["email"] else None,
             "home_phone":    r["phone"]
         })
 
-    df_sf  = pd.DataFrame(salesforce).sample(frac=0.9).reset_index(drop=True)
-    df_wl  = pd.DataFrame(web_leads).sample(frac=0.8).reset_index(drop=True)
+    df_sf  = pd.DataFrame(volunteer_portal).sample(frac=0.9).reset_index(drop=True)
+    df_wl  = pd.DataFrame(donation_forms).sample(frac=0.8).reset_index(drop=True)
     df_leg = pd.DataFrame(legacy).sample(frac=0.85).reset_index(drop=True)
 
-    # --- Inject realistic-looking bots into all 3 sources ---
+    # --- Inject realistic-looking anomilies into all 3 sources ---
     for _ in range(5):
-        bdom = random.choice(_BOT_DOMAINS)
+        bdom = random.choice(_MISTAKE_DOMAINS)
         bloc = fake.user_name() + str(random.randint(1, 99))
-        df_sf.loc[len(df_sf)]  = {"customer_id": f"BOT{random.randint(10000,99999)}",
+        df_sf.loc[len(df_sf)]  = {"donor_id": f"TEMP{random.randint(10000,99999)}",
                                    "email": f"{bloc}@{bdom}", "phone": "+00000000000"}
-        df_wl.loc[len(df_wl)]  = {"customer_id": None,
+        df_wl.loc[len(df_wl)]  = {"donor_id": None,
                                    "email": f"{fake.user_name()}99@{bdom}", "phone": None}
-        df_leg.loc[len(df_leg)] = {"legacy_id": f"BOT{random.randint(10000,99999)}",
+        df_leg.loc[len(df_leg)] = {"legacy_id": f"TEMP{random.randint(10000,99999)}",
                                    "contact_email": f"BULK@{bdom.upper()}", "home_phone": "+00000000000"}
 
     # --- Build hidden truth using CONFLICT_RULES ---
-    # email  = prefer_salesforce  (canonical SF email)
-    # phone  = prefer_web_leads   (fresh WL phone when available, else SF phone)
     resolved_truth = []
     for r in truth:
-        resolved_phone = wl_phones.get(r["customer_id"], r["phone"])  # WL > SF
+        resolved_phone = wl_phones.get(r["donor_id"], r["phone"])  # Forms > Portal
         resolved_truth.append({
-            "customer_id": r["customer_id"],   # prefer_salesforce
-            "email":       r["email"],          # prefer_salesforce
-            "phone":       resolved_phone,      # prefer_web_leads
+            "donor_id": r["donor_id"],   # prefer_volunteer_portal
+            "email":       r["email"],          # prefer_volunteer_portal
+            "phone":       resolved_phone,      # prefer_donation_forms
         })
 
     return {
         "sources": {
-            "salesforce": df_sf.sample(frac=1).reset_index(drop=True),
-            "web_leads":  df_wl.sample(frac=1).reset_index(drop=True),
-            "legacy_db":  df_leg.sample(frac=1).reset_index(drop=True)
+            "volunteer_portal": df_sf.sample(frac=1).reset_index(drop=True),
+            "donation_forms":  df_wl.sample(frac=1).reset_index(drop=True),
+            "legacy_ngo_db":  df_leg.sample(frac=1).reset_index(drop=True)
         },
         "hidden_truth": {"merged_output": pd.DataFrame(resolved_truth)},
         "conflict_rules": CONFLICT_RULES,
         "schema": {
-            "customer_id": "string",
-            "email":       "string (lowercase, canonical from Salesforce)",
-            "phone":       "string (E.164, prefer Web Leads when available)"
+            "donor_id": "string",
+            "email":       "string (lowercase, canonical from Volunteer Portal)",
+            "phone":       "string (E.164, prefer Donation Forms when available)"
         }
     }
 

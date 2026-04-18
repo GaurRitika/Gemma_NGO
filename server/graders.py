@@ -1,7 +1,7 @@
 import pandas as pd
 from server.environment import CRMDataPipelineEnv
 
-def evaluate_dataframes(truth_df: pd.DataFrame, final_df: pd.DataFrame, join_key="customer_id") -> float:
+def evaluate_dataframes(truth_df: pd.DataFrame, final_df: pd.DataFrame, join_key="donor_id") -> float:
     if final_df.empty or truth_df is None or truth_df.empty:
         return 0.01
         
@@ -63,7 +63,7 @@ def _grade(env: CRMDataPipelineEnv, truth_key: str, final_source: str) -> float:
     return evaluate_dataframes(truth_df, final_df)
 
 def grade_task_1(env: CRMDataPipelineEnv) -> float:
-    return _grade(env, "web_forms", "web_forms")
+    return _grade(env, "donation_forms", "donation_forms")
 
 def grade_task_2(env: CRMDataPipelineEnv) -> float:
     return _grade(env, "merged_output", "merged_output")

@@ -93,6 +93,35 @@ class CRMDataPipelineEnv(Environment):
         obs = self._build_observation(done=False, reward=0.0) 
         return CRMStepResult(observation=obs, reward=0.0, done=False)
         
+    def reset_with_dataframe(self, user_df: pd.DataFrame, source_name="user_data") -> "CRMStepResult":
+        """Instantiate environment directly with a user uploaded dataset."""
+        self._task_id = "real_data"
+        episode_id = str(uuid.uuid4())
+        
+        self._sources = {source_name: user_df.copy()}
+        self._final_source_name = ""
+        
+        GLOBAL_TRUTH_STORE[episode_id] = {} # No hidden truth for real data
+        GLOBAL_ENV_STORE[episode_id] = self
+        
+        self.final_df = None 
+        # Attempt to infer a very generic schema target based on columns
+        self._schema_target = {col: "string" for col in user_df.columns} 
+        self._conflict_rules = {} 
+        
+        self._state = CRMPipelineState(
+            episode_id=episode_id,
+            step_count=0, 
+            task_id="real_data"
+        )
+        
+        self._current_view = "Select a source to view."
+        self._last_feedback = f"Environment reset natively for Real Mode upload. Episode UUID: {episode_id}"
+        self._report = None 
+        self._last_action = None
+        
+        obs = self._build_observation(done=False, reward=0.0) 
+        return CRMStepResult(observation=obs, reward=0.0, done=False)
 
     def step(self, action: CRMPipelineAction) -> "CRMStepResult": 
         """Executes a parsed JSON payload synchronously within the data engineering POMDP scope."""
@@ -150,9 +179,10 @@ class CRMDataPipelineEnv(Environment):
 
     def _build_observation(self, done: bool, reward: float) -> CRMPipelineObservation:
         objective = {
-            "t1": "Normalize web_forms dataset",
-            "t2": "Deduplicate legacy_db dataset",
-            "t3": "Merge Salesforce, Web Leads, Legacy databases"
+            "t1": "Normalize donation_forms dataset",
+            "t2": "Deduplicate legacy_ngo_db dataset",
+            "t3": "Merge Volunteer Portal, Donation Forms, Legacy NGO databases",
+            "real_data": "Clean and format custom uploaded dataset"
         }.get(self._task_id, "Unknown task")
         
         return CRMPipelineObservation(

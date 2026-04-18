@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemma 4 NGO Data Copilot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container glass-fx">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="branding">
+                <h1>🌍 Gemma 4 NGO Data Copilot</h1>
+                <p>Autonomous Local AI for Non-Profit Data Engineering</p>
+            </div>
+            
+            <div class="mode-toggle">
+                <span class="toggle-label" id="label-demo">Demo Mode</span>
+                <label class="switch">
+                    <input type="checkbox" id="mode-switch">
+                    <span class="slider round"></span>
+                </label>
+                <span class="toggle-label" id="label-real">Real Mode</span>
+            </div>
+
+            <div class="controls">
+                <!-- Dropzone for real mode -->
+                <div id="dropzone" class="dropzone hidden">
+                    <p>📂 Drag & Drop custom CSV here or <label class="file-label">browse<input type="file" id="csv-upload" accept=".csv" class="hidden"></label></p>
+                </div>
+                <button id="start-btn" class="primary-btn">Initialize Cleaning Agent</button>
+                <button id="export-btn" class="secondary-btn" disabled>Export Clean CSV</button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="workspace">
+            <!-- Left Data View -->
+            <section class="data-panel glass-panel slide-up">
+                <h2>Raw Extracted Data</h2>
+                <div class="table-container" id="raw-table-container">
+                    <p class="placeholder-text">Waiting to profile sources...</p>
+                    <table id="raw-table"></table>
+                </div>
+            </section>
+
+            <!-- Agent Logs / Center -->
+            <section class="agent-panel glass-panel slide-up delay-1">
+                <h2>🧠 Gemma 4 Reasoning Log</h2>
+                <div class="logs-container" id="logs-container">
+                    <!-- Logs will populate here -->
+                </div>
+            </section>
+
+            <!-- Right Data View -->
+            <section class="data-panel glass-panel slide-up delay-2">
+                <h2>Cleaned Master Data</h2>
+                <div class="table-container" id="clean-table-container">
+                    <p class="placeholder-text">Waiting for agent execution...</p>
+                    <table id="clean-table"></table>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

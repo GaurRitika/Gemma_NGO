@@ -1,4 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi.responses import Response
+import pandas as pd
+from io import BytesIO
 
 """
 Server bootstrap for the CRM Data Pipeline OpenEnv Environment.
@@ -12,6 +15,9 @@ except ImportError:
     from fastapi import FastAPI
     def create_fastapi_app(env_cls, act_cls=None, obs_cls=None): return FastAPI()
 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
+
 import yaml
 import server.environment as env_mod
 print(f"DEBUG: env_mod path: {env_mod.__file__}")
@@ -19,16 +25,75 @@ print(f"DEBUG: env_mod path: {env_mod.__file__}")
 from server.environment import CRMDataPipelineEnv, GLOBAL_TRUTH_STORE, GLOBAL_ENV_STORE
 from server.graders import get_grader, evaluate_dataframes
 from models import CRMPipelineAction, CRMPipelineObservation
+from server.agent import plan_next_action
+import os
 
 
 app = create_fastapi_app(CRMDataPipelineEnv, CRMPipelineAction, CRMPipelineObservation)
 router = APIRouter()
 
+# Mount the beautiful UI we built in Phase 2
+app.mount("/ui", StaticFiles(directory="public", html=True), name="ui")
+
 @router.get("/")
 def read_root():
-    """Health check endpoint to ensure server runtime stability."""
-    return {"status": "ok", "message": "CRM Pipeline Environment is actively running."}
+    """Redirect root directly to the beautiful UI dashboard."""
+    return RedirectResponse(url="/ui/index.html")
 
+@router.post("/api/start_demo")
+def start_demo():
+    """Initializes the CRM environment natively and returns the messy raw data."""
+    env = CRMDataPipelineEnv()
+    os.environ["TASK_ID"] = "t1" # We use task 1 (Web Forms) for the main demo
+    res = env.reset()
+    episode_id = env.state.episode_id
+    
+    # Grab the messy data to show in the left UI pane
+    raw_df = env.get_final_dataframe("donation_forms")
+    # Convert to standard dictionary list for JS rendering, replace NaN with empty string
+    raw_data = raw_df.fillna("").head(20).to_dict(orient="records")
+    
+    return {
+        "episode_id": episode_id,
+        "observation": res.observation.dict(),
+        "raw_data": raw_data
+    }
+
+@router.post("/api/agent_step/{episode_id}")
+def agent_step(episode_id: str):
+    """Hits the local Gemma model to plan an action, then executes it!"""
+    env = GLOBAL_ENV_STORE.get(episode_id)
+    if not env:
+        raise HTTPException(status_code=404, detail="Environment gone missing.")
+        
+    # Get current observation
+    current_obs = env._build_observation(False, 0.0).dict()
+    
+    # --- HERE IS THE MAGIC --- 
+    # Let Gemma 4 decide the action!
+    gemma_action = plan_next_action(current_obs)
+    
+    # Execute the action Gemma chose in the real environment
+    result = env.step(gemma_action)
+    
+    # Fetch whichever table Gemma modified to show the user
+    source_name = gemma_action.source or "donation_forms"
+    if gemma_action.action_type.value == "SUBMIT_PIPELINE":
+        source_name = gemma_action.final_source or "donation_forms"
+        
+    try:
+        updated_df = env.get_final_dataframe(source_name)
+        table_data = updated_df.fillna("").head(20).to_dict(orient="records")
+    except:
+        table_data = []
+
+    return {
+        "action": gemma_action.action_type.value,
+        "reason": result.observation.last_action_feedback,
+        "observation": result.observation.dict(),
+        "table_data": table_data,
+        "done": result.done
+    }
 
 @router.post("/grader/{episode_id}")
 def grade_episode(episode_id: str, final_source: str, task_id: str):
@@ -80,6 +145,41 @@ def grade_episode(episode_id: str, final_source: str, task_id: str):
         "score": score,
         "rows": len(agent_df)
     }
+
+@router.post("/api/upload_csv")
+async def upload_csv(file: UploadFile = File(...)):
+    """Receives user dataset and bootstraps Real Mode."""
+    contents = await file.read()
+    try:
+        user_df = pd.read_csv(BytesIO(contents))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid CSV: {e}")
+        
+    env = CRMDataPipelineEnv()
+    res = env.reset_with_dataframe(user_df, source_name="user_upload")
+    episode_id = env.state.episode_id
+    
+    raw_data = user_df.fillna("").head(20).to_dict(orient="records")
+    
+    return {
+        "episode_id": episode_id,
+        "observation": res.observation.dict(),
+        "raw_data": raw_data
+    }
+
+@router.get("/api/download_csv/{episode_id}")
+def download_csv(episode_id: str):
+    """Exports the cleaned dataframe."""
+    env = GLOBAL_ENV_STORE.get(episode_id)
+    if not env or env.final_df is None:
+        raise HTTPException(status_code=404, detail="No final cleaned data available.")
+        
+    csv_data = env.final_df.to_csv(index=False)
+    return Response(
+        content=csv_data, 
+        media_type="text/csv", 
+        headers={"Content-Disposition": f"attachment; filename=cleaned_ngo_data.csv"}
+    )
 
 
 app.include_router(router)

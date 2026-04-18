@@ -1,0 +1,30 @@
+# Walkthrough: Building the AI NGO Data Copilot
+
+We successfully pivoted the raw CRM evaluation benchmark into a functional, production-ready AI Copilot for the **Gemma 4 Good** Hackathon! 
+
+## Summary of Completed Tasks
+
+We completed a massive two-phase architectural rework to hit the constraints of the Digital Equity and Ollama tracks.
+
+### 1. Data Theme Redesign 
+We modified `server/data_generator.py` and `openenv.yaml` to completely remove all traces of generic "CRM Sales" data. The system now autonomously simulates the absolute chaos of NGO administration:
+- **Sources**: `volunteer_portal`, `donation_forms`, `legacy_ngo_db`
+- **Anomalies**: Instead of standard email spambots, the pipeline injects realistic field volunteer entry errors (e.g. `Temp Entry`, and offline domains).
+- **Core Entities**: Strict mappings were changed from `customer_id` to `donor_id` across the internal Grader loops.
+
+### 2. The Dual-Mode Backend 
+We overhauled `server/environment.py` by adding `reset_with_dataframe()`. This intercepts the RL testing-engine logic and mounts a user's literal CSV as the primary task scope, bypassing the pre-fab constraints.
+
+FastAPI endpoints were bolted into `server/app.py`:
+- `[POST] /api/upload_csv`: Ingests multipart files and instantiates the environment state on that custom dataframe.
+- `[GET] /api/download_csv/{episode_id}`: Outputs the mathematically pristine Pandas array to a downloadable `cleaned_ngo_data.csv`.
+
+### 3. The "Wow-Factor" UI 
+We drastically redesigned the `public/` directory HTML, CSS, and JS. 
+- Integrated a premium **Glassmorphism Dark Mode** featuring subtle drop shadows, custom background gradients, and Outfit typography.
+- Installed the **Mode Toggle Slider** so a user can switch strictly between "Demo Mode" (to watch the synthetic 3-way merge conflict occur live) and "Real Mode" (which unhides the drag-and-drop secure file dropzone).
+
+## What To Do Next
+1. Run the server natively `python -m server.app`
+2. Open your localhost (usually 8080 or 8000). 
+3. Record your pitch video using the newly generated UI and the provided script!

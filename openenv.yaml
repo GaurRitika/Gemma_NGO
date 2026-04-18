@@ -1,17 +1,17 @@
-id: crm-data-pipeline
-name: CRM Data Pipeline Agent
-version: 1.0.0
+id: ngo-data-copilot
+name: AI Data Copilot for NGOs
+version: 2.0.0
 description: |
-  An environment simulating a CRM Data Engineer. The agent receives messy customer data from various sources (Web, Salesforce, Legacy DB) and must standardize, clean, and merge them into a pristine, analytics-ready pipeline table.
-tags: ["etl", "data-engineering", "crm", "pandas"]
+  An environment simulating an NGO Data Architect. The agent receives messy donor and volunteer data from various sources (Donation Forms, Volunteer Portal, Legacy NGO DB) and must standardize, clean, and merge them into a pristine, analytics-ready pipeline table for impact reporting.
+tags: ["etl", "data-engineering", "ngo", "pandas", "gemma"]
 endpoints: {}
 tasks:
   - id: t1
-    description: "Task 1 (Easy): Normalize the single web_forms dataset. Fix date formats, lowercase emails, strip spaces."
+    description: "Task 1 (Easy): Normalize the single donation_forms dataset. Fix date formats, lowercase emails, strip spaces."
     difficulty: easy
   - id: t2
-    description: "Task 2 (Medium): Deduplicate the legacy_db dataset. Identify matching customers with messy info and merge them."
+    description: "Task 2 (Medium): Deduplicate the legacy_ngo_db dataset. Identify matching donors with messy info and merge them."
     difficulty: medium
   - id: t3
-    description: "Task 3 (Hard): Resolve a 3-way merge conflict. Standardize and merge Salesforce, Web Leads, and Legacy DBs."
+    description: "Task 3 (Hard): Resolve a 3-way merge conflict. Standardize and merge Volunteer Portal, Donation Forms, and Legacy NGO DBs."
     difficulty: hard
