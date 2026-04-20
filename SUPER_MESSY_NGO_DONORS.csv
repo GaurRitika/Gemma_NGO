@@ -1,0 +1,22 @@
+donor_id,full_name,contact_email,phone_number,registration_date,donation_amount
+DONOR-100,Sarah Jenkins,sarah.j@example.com,+14155552671,2023-01-15,150.00
+DONOR-200,   JOHN SMITH  ,JOHN@EXAMPLE.CO,(212) 555-1234 ext 42,01/22/2023,
+DONOR-300,Maria Garcia,,+447911123456,2023-14-05,25.50
+DONOR-400,Amit Patel,amit.p@gmail.com,123-456-7890,2022-11-30,500.00
+TEMP-1029,UNKNOWN VOLUNTEER,spam_bot42@offline.temp,+00000000000,1970-01-01,0.00
+DONOR-200,John Smith,john@example.co,,01/22/2023,75.00
+DONOR-500,lucy chen,LUCY.CHEN@CORP.NET,+15551234567,10/10/2021,200.00
+DONOR-600,David R.,david.r@offline.org,,2021-08-15,
+DONOR-700,Elena Rostova,elena_r@mail.ru,+79165552233,13/13/2021,120.00
+DONOR-800,  mark rober,mark@youtube.com,+18005559999,2020-02-29,1000.00
+TEMP-9932,UNKNOWN VOLUNTEER,spam_bot99@offline.temp,+00000000000,1970-01-01,0.00
+DONOR-900,Ali Hasan,ali.h@global.org,(555) 123-4567,2023-05-18,50.00
+DONOR-900,  Ali Hasan ,ali.h@global.org,,2023-05-18,50.00
+DONOR-1000,Emma Watson,emma.w@actor.uk,+442079460000,2021/04/15,350.00
+DONOR-1100,Carlos Sainz,carlos@f1.com,+,2023-11-01,
+DONOR-1200,Yuki Tsunoda,,+819012345678,2022-03-22,75.25
+DONOR-1300,   james bond  ,007@mi6.gov.uk,(000) 007-0007,1962-10-05,
+TEMP-8321,UNKNOWN VOLUNTEER,spam_bot12@offline.temp,+00000000000,1970-01-01,0.00
+DONOR-1400,Lara Croft,lara@tomb.com,+447700900123,1996/10/25,800.00
+DONOR-1500,Tony Stark,tony@stark.com,(212) 970-4133,2008-05-02,9999.99
+DONOR-1500,Tony Stark,tony@stark.com,,2008-05-02,

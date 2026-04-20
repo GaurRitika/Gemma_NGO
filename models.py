@@ -58,7 +58,7 @@ class CRMPipelineAction(Action):
     source: Optional[str] = Field(None, description="The primary schema table or dataset source to reference")
     source2: Optional[str] = Field(None, description="Secondary schema structure needed for merge operations")
     column: Optional[str] = Field(None, description="The specific column attribute to aggressively mutate")
-    standardization_strategy: Optional[StandardizationStrategy] = None
+    standardization_strategy: Optional[str] = Field(None, description="Standardization to apply, e.g. LOWERCASE_STRIP, PHONE_E164, TRIM")
     missing_strategy: Optional[MissingStrategy] = None
     deduplication_strategy: Optional[DeduplicationStrategy] = None
     fallback_value: Optional[str] = None

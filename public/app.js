@@ -5,39 +5,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const rawTableContainer = document.getElementById('raw-table-container');
     const cleanTableContainer = document.getElementById('clean-table-container');
     
-    // Mode Toggle Elements
-    const modeSwitch = document.getElementById('mode-switch');
-    const labelDemo = document.getElementById('label-demo');
-    const labelReal = document.getElementById('label-real');
+    // File UI Elements
     const dropzone = document.getElementById('dropzone');
     const csvUploadInput = document.getElementById('csv-upload');
+    const dropzoneText = document.getElementById('dropzone-text');
     
     let isAgentRunning = false;
     let currentEpisodeId = null;
-    let isRealMode = false;
     let uploadedFile = null;
 
-    // --- Mode Toggling ---
-    modeSwitch.addEventListener('change', (e) => {
-        isRealMode = e.target.checked;
-        if (isRealMode) {
-            labelReal.classList.add('active');
-            labelDemo.classList.remove('active');
-            dropzone.classList.remove('hidden');
-            startBtn.classList.add('hidden'); // hidden until file is dropped
-        } else {
-            labelDemo.classList.add('active');
-            labelReal.classList.remove('active');
-            dropzone.classList.add('hidden');
-            startBtn.classList.remove('hidden');
-            startBtn.textContent = 'Initialize Cleaning Agent';
-            uploadedFile = null;
-        }
+    // --- Drag and Drop Logic ---
+    dropzone.addEventListener('dragenter', (e) => {
+        e.preventDefault();
     });
 
-    labelDemo.classList.add('active'); // Default
-
-    // --- Drag and Drop Logic ---
     dropzone.addEventListener('dragover', (e) => {
         e.preventDefault();
         dropzone.classList.add('dragover');
@@ -63,22 +44,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleFileUpload(file) {
         if (!file.name.endsWith('.csv')) {
-            alert("Please upload a valid CSV file.");
+            alert("Please upload a valid CSV file formatting.");
             return;
         }
         uploadedFile = file;
-        dropzone.querySelector('p').innerHTML = `✅ ${file.name} ready.`;
+        dropzoneText.innerHTML = `✅ ${file.name} ready to process.`;
         startBtn.classList.remove('hidden');
-        startBtn.textContent = 'Clean Uploaded Data';
     }
 
     // --- Core Agent Start Logic ---
     startBtn.addEventListener('click', async () => {
-        if (isAgentRunning) return;
+        if (isAgentRunning || !uploadedFile) return;
         
         isAgentRunning = true;
-        startBtn.textContent = 'Agent Running...';
-        startBtn.style.opacity = '0.7';
+        startBtn.textContent = 'Agent Analyzing...';
+        startBtn.disabled = true;
         
         // Clear placeholders
         rawTableContainer.innerHTML = '<table id="raw-table"></table>';
@@ -87,44 +67,34 @@ document.addEventListener('DOMContentLoaded', () => {
         exportBtn.disabled = true;
 
         try {
-            let startData;
+            addLog('SYSTEM', 'Connecting to secure local workspace and interpreting file...');
             
-            if (isRealMode && uploadedFile) {
-                // REAL MODE - File Upload
-                addLog('SYSTEM', 'Uploading custom dataset and booting Gemma 4 Copilot in Real Mode...');
-                const formData = new FormData();
-                formData.append('file', uploadedFile);
-                
-                const res = await fetch('/api/upload_csv', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (!res.ok) throw new Error(await res.text());
-                startData = await res.json();
-                
-            } else {
-                // DEMO MODE - Core Env Testbed
-                addLog('SYSTEM', 'Initializing OpenEnv synthetic NGO dataset and booting Gemma 4 planner...');
-                const res = await fetch('/api/start_demo', { method: 'POST' });
-                if (!res.ok) throw new Error(await res.text());
-                startData = await res.json();
-            }
-
+            // Upload dataset to backend
+            const formData = new FormData();
+            formData.append('file', uploadedFile);
+            
+            const res = await fetch('/api/upload_csv', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!res.ok) throw new Error(await res.text());
+            const startData = await res.json();
+            
             currentEpisodeId = startData.episode_id;
             
-            addLog('PROFILE_SOURCE', 'Environment instantiated and messy schema discovered.');
+            addLog('PROFILE', 'File uploaded. Initial schema inferred successfully.');
             renderTable('raw-table', startData.raw_data);
             
-            // Loop the Agent dynamically
+            // Trigger Agent Loop dynamically
             await runAgentLoop();
 
         } catch (error) {
             console.error(error);
-            addLog('SYSTEM_ERROR', `Failed to initialize: ${error.message}`);
+            addLog('ERROR', `Failed to initialize: ${error.message}`);
             isAgentRunning = false;
-            startBtn.style.opacity = '1';
-            startBtn.textContent = isRealMode ? 'Clean Uploaded Data' : 'Initialize Cleaning Agent';
+            startBtn.disabled = false;
+            startBtn.textContent = 'Start Cleaning Data';
         }
     });
 
@@ -188,13 +158,13 @@ document.addEventListener('DOMContentLoaded', () => {
         let isDone = false;
         
         while (!isDone) {
-            addLog('AGENT_THINKING', 'Gemma evaluating observation space...');
+            addLog('AGENT_THINKING', 'Evaluating schema and applying non-profit data formats...');
             
-            await new Promise(r => setTimeout(r, 1000)); // Visual spacing
+            await new Promise(r => setTimeout(r, 1200)); // Pacing for readability
             
             const stepRes = await fetch(`/api/agent_step/${currentEpisodeId}`, { method: 'POST' });
             if (!stepRes.ok) {
-                addLog('SERVER_FAULT', 'Gemma unreachable or backend crashed.');
+                addLog('FAULT', 'Agent unreachable. Verify local Ollama instance is active.');
                 break;
             }
             const stepData = await stepRes.json();
@@ -207,17 +177,19 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (stepData.done) {
                 isDone = true;
-                addLog('SUBMIT_PIPELINE', 'Gemma 4 has confidently finished data standardization.');
-                startBtn.textContent = 'Cleanup Complete';
-                startBtn.style.opacity = '1';
+                addLog('SUBMIT_PIPELINE', 'Data standardization sequence successfully verified.');
+                startBtn.textContent = 'Data is Clean!';
                 exportBtn.disabled = false;
+                exportBtn.classList.add('primary-btn');
+                exportBtn.classList.remove('secondary-btn');
                 isAgentRunning = false;
             }
             
-            if (document.querySelectorAll('.log-item').length > 15) {
-                addLog('SYSTEM_WARN', 'Agent reached maximum execution depth threshold. Halting.');
+            if (document.querySelectorAll('.log-item').length > 18) {
+                addLog('WARN', 'Agent reached maximum execution depth threshold. Halting to preserve resources.');
+                startBtn.textContent = 'Operation Halted';
+                exportBtn.disabled = false;
                 isAgentRunning = false;
-                startBtn.style.opacity = '1';
                 break;
             }
         }

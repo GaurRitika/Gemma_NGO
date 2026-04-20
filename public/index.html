@@ -1,36 +1,27 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemma 4 NGO Data Copilot</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>AI Data Copilot for NGOs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app-container glass-fx">
+    <div class="app-container">
         <!-- Header -->
-        <header class="main-header">
+        <header class="main-header shadow-sm">
             <div class="branding">
-                <h1>🌍 Gemma 4 NGO Data Copilot</h1>
-                <p>Autonomous Local AI for Non-Profit Data Engineering</p>
+                <h1>AI Data Copilot for NGOs</h1>
+                <p>Autonomous, privacy-first data engineering built on Gemma 4.</p>
             </div>
             
-            <div class="mode-toggle">
-                <span class="toggle-label" id="label-demo">Demo Mode</span>
-                <label class="switch">
-                    <input type="checkbox" id="mode-switch">
-                    <span class="slider round"></span>
-                </label>
-                <span class="toggle-label" id="label-real">Real Mode</span>
-            </div>
-
             <div class="controls">
-                <!-- Dropzone for real mode -->
-                <div id="dropzone" class="dropzone hidden">
-                    <p>📂 Drag & Drop custom CSV here or <label class="file-label">browse<input type="file" id="csv-upload" accept=".csv" class="hidden"></label></p>
+                <div id="dropzone" class="dropzone">
+                    <input type="file" id="csv-upload" accept=".csv" style="opacity: 0; position: absolute; width: 0; height: 0; z-index: -1;">
+                    <p id="dropzone-text">📂 Drag & Drop messy donor CSV here or <label for="csv-upload" class="file-label">browse</label></p>
                 </div>
-                <button id="start-btn" class="primary-btn">Initialize Cleaning Agent</button>
+                <button id="start-btn" class="primary-btn hidden">Start Cleaning Data</button>
                 <button id="export-btn" class="secondary-btn" disabled>Export Clean CSV</button>
             </div>
         </header>
@@ -38,27 +29,27 @@
         <!-- Main Workspace -->
         <main class="workspace">
             <!-- Left Data View -->
-            <section class="data-panel glass-panel slide-up">
-                <h2>Raw Extracted Data</h2>
+            <section class="data-panel card slide-up">
+                <h2>Raw Uploaded Data</h2>
                 <div class="table-container" id="raw-table-container">
-                    <p class="placeholder-text">Waiting to profile sources...</p>
+                    <p class="placeholder-text">Please upload a dataset to begin...</p>
                     <table id="raw-table"></table>
                 </div>
             </section>
 
             <!-- Agent Logs / Center -->
-            <section class="agent-panel glass-panel slide-up delay-1">
-                <h2>🧠 Gemma 4 Reasoning Log</h2>
+            <section class="agent-panel card slide-up delay-1">
+                <h2>Assistant Reasoning Log</h2>
                 <div class="logs-container" id="logs-container">
                     <!-- Logs will populate here -->
                 </div>
             </section>
 
             <!-- Right Data View -->
-            <section class="data-panel glass-panel slide-up delay-2">
-                <h2>Cleaned Master Data</h2>
+            <section class="data-panel card slide-up delay-2">
+                <h2>Standardized Output</h2>
                 <div class="table-container" id="clean-table-container">
-                    <p class="placeholder-text">Waiting for agent execution...</p>
+                    <p class="placeholder-text">Awaiting agent completion...</p>
                     <table id="clean-table"></table>
                 </div>
             </section>

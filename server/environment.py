@@ -57,6 +57,7 @@ class CRMDataPipelineEnv(Environment):
         self._last_action = None
         self._final_source_name: str = ""
         self.final_df = None
+        self._last_reward = 0.0
 
     def reset(self) -> "CRMStepResult":
         """Reinstantiates a fresh episode securely, allocating isolated memory contexts per agent invocation."""
@@ -89,6 +90,9 @@ class CRMDataPipelineEnv(Environment):
         self._last_feedback = f"Environment reset natively for task {task_id}. Episode UUID: {episode_id}"
         self._report = None 
         self._last_action = None
+        
+        self._last_action = None
+        self._last_reward = 0.0
         
         obs = self._build_observation(done=False, reward=0.0) 
         return CRMStepResult(observation=obs, reward=0.0, done=False)
@@ -165,8 +169,10 @@ class CRMDataPipelineEnv(Environment):
                 reward = -0.05
         except Exception as e:
             self._last_feedback = f"Error: {str(e)}"
+            self._last_feedback = f"Error: {str(e)}"
             reward = -0.05
             
+        self._last_reward = reward
         obs = self._build_observation(done=done, reward=reward)
         return CRMStepResult(observation=obs, reward=reward, done=done)
         
@@ -185,13 +191,17 @@ class CRMDataPipelineEnv(Environment):
             "real_data": "Clean and format custom uploaded dataset"
         }.get(self._task_id, "Unknown task")
         
+        # MAGIC: Always let the agent peek at the data so it doesn't guess blindly!
+        df_target = self._sources.get("user_upload", self._sources.get("donation_forms", pd.DataFrame()))
+        dynamic_view = df_target.head(3).to_dict(orient="records") if not df_target.empty else "No records"
+        
         return CRMPipelineObservation(
             done=done,
             reward=reward,
             current_task_objective=objective,
             schema_target=self._schema_target,
             available_sources=list(self._sources.keys()),
-            current_view=self._current_view,
+            current_view=str(dynamic_view),
             data_quality_report=self._report if self._report else "",
             last_action_feedback=self._last_feedback,
             conflict_rules=self._conflict_rules if self._conflict_rules else None
@@ -237,12 +247,12 @@ class CRMDataPipelineEnv(Environment):
         change_count = 0
         total_rows = len(df)
         
-        if strat == StandardizationStrategy.LOWERCASE_STRIP:
+        if strat == StandardizationStrategy.LOWERCASE_STRIP.value or strat == "LOWERCASE_STRIP":
             # Check if strings are already lowercase/stripped
             pre_clean = df[col].astype(str).str.contains(r'[A-Z]|\s+$|^\s+', regex=True).sum()
             df[col] = df[col].astype(str).str.lower().str.strip()
             change_count = pre_clean
-        elif strat == StandardizationStrategy.EXTRACT_NUMBERS:
+        elif strat == StandardizationStrategy.EXTRACT_NUMBERS.value or strat == "EXTRACT_NUMBERS":
             # Check for non-digit characters in phone (excluding + prefix)
             pre_clean = df[col].astype(str).str.contains(r'[^\d+]', regex=True).sum()
             def to_e164(p):
@@ -255,16 +265,21 @@ class CRMDataPipelineEnv(Environment):
                 return "+" + digits
             df[col] = df[col].apply(to_e164)
             change_count = pre_clean
-        elif strat == StandardizationStrategy.TO_DATETIME_ISO:
+        elif strat == StandardizationStrategy.TO_DATETIME_ISO.value or strat == "TO_DATETIME_ISO":
             pre_clean = df[col].astype(str).str.contains(r'/', regex=True).sum() # common dirty separator
             df[col] = pd.to_datetime(df[col], errors='coerce').dt.strftime('%Y-%m-%dT00:00:00').fillna("")
             change_count = pre_clean
+        else:
+            self._last_feedback = f"CRITICAL ERROR: Strategy '{strat}' does not exist! You MUST use LOWERCASE_STRIP, EXTRACT_NUMBERS, or TO_DATETIME_ISO."
+            return -0.2
             
-        self._last_feedback = f"Standardized {action.source}.{col} using {strat}"
-        
-        # Dense reward: +0.01 per 10% of rows improved (capped at 0.05)
+        if change_count == 0:
+            self._last_feedback = f"ERROR: Column '{col}' is already perfectly clean! Do NOT touch '{col}' again. Choose a different column (like registration_date or contact_email)."
+            return -0.1
+            
+        self._last_feedback = f"Standardized {action.source}.{col} using {strat}. Fixed {change_count} rows."
         improvement_ratio = change_count / max(1, total_rows)
-        return min(0.05, 0.01 + (improvement_ratio * 0.1))
+        return min(0.05, 0.02 + (improvement_ratio * 0.1))
 
     def _handle_missing(self, action: CRMPipelineAction) -> float:
         df = self._get_df(action.source)
@@ -278,6 +293,10 @@ class CRMDataPipelineEnv(Environment):
         elif strat == MissingStrategy.FILL_VALUE:
             df[col].fillna(action.fallback_value, inplace=True)
             reward = (null_count_before / max(1, len(df))) * 0.05
+            
+        if null_count_before == 0:
+            self._last_feedback = f"Error: No missing values found in {action.source}.{col}. Penalty applied! Pick a different column."
+            return -0.1
             
         self._last_feedback = f"Handled {null_count_before} missing values in {action.source}.{col}"
         return max(0.01, reward)
@@ -297,9 +316,11 @@ class CRMDataPipelineEnv(Environment):
              
         removed = start_len - len(df)
         self._sources[action.source] = df # Save it back
+        if removed == 0:
+            self._last_feedback = f"Error: No duplicates found in {action.source} using {action.deduplication_strategy}. Penalty applied! Move to a different action."
+            return -0.1
+            
         self._last_feedback = f"Deduplicated {action.source}, removed {removed} rows."
-        
-        # Fraction of source cleaned * base reward
         return (removed / max(1, start_len)) * 0.2
 
     def _handle_merge(self, action: CRMPipelineAction) -> float:

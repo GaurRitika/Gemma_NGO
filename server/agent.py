@@ -13,17 +13,28 @@ def plan_next_action(observation: dict) -> CRMPipelineAction:
     """
     
     prompt = f"""You are the Gemma 4 CRM Data Engineer Copilot.
-You clean messy datasets autonomously. Look at the current state, and output valid JSON
-representing your next chosen action. 
+You are operating inside an RL Environment. You must clean messy datasets autonomously. Look at the current observation state, and output valid JSON representing your next chosen action. 
+
+AVAILABLE ACTION TYPES:
+- "STANDARDIZE_COLUMN": Clean and format string columns (Strategies: "LOWERCASE_STRIP", "EXTRACT_NUMBERS", "TO_DATETIME_ISO")
+- "HANDLE_MISSING": Fix missing/null values (Strategies: "FILL_MEAN", "FILL_MODE", "DROP_ROW", "FILL_VALUE")
+- "DEDUPLICATE": Remove identical human duplicate rows (Strategies: "FUZZY_NAME_PHONE", "EXACT_EMAIL")
+- "PROFILE_SOURCE": Analyze a source dataset (Use this sparingly, usually once at the start).
+- "SUBMIT_PIPELINE": Call this ONLY when the data is fully clean and you are ready to terminate the episode.
+
+INSTRUCTIONS:
+1. Read the "observation" JSON carefully. If you receive a Penalty or Negative Reward, YOU MUST CHANGE YOUR STRATEGY or PICK A DIFFERENT COLUMN. Do NOT repeat the exact same action!
+2. Do NOT just copy the example JSON. Look at the null counts and dirty formats in the current observation and clean the dirtiest columns first!
+3. Output ONLY raw JSON matching this structure perfectly. When no columns have missing values, duplicates, or formatting issues, select "SUBMIT_PIPELINE".
 
 Current Observation:
 {json.dumps(observation, indent=2)}
 
-Output ONLY valid JSON matching this structure perfectly:
+Example JSON Output format:
 {{
-    "action_type": "PROFILE_SOURCE",  // Must be one of the PipelineActionTypes
-    "source": "example_table",
-    "column": "email",
+    "action_type": "STANDARDIZE_COLUMN", 
+    "source": "user_upload",
+    "column": "<identify_dirty_column_from_obs>",
     "standardization_strategy": "LOWERCASE_STRIP"
 }}
 """
@@ -49,5 +60,4 @@ Output ONLY valid JSON matching this structure perfectly:
         
     except Exception as e:
         print(f"⚠️ Gemma Agent Error: {e}. Is Ollama running?")
-        # Fallback to keep the loop alive even if Gemma crashes
-        return CRMPipelineAction(action_type="PROFILE_SOURCE", source="donation_forms")
+        raise RuntimeError(f"Gemma API failure or formatting error: {e}")

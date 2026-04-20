@@ -66,8 +66,9 @@ def agent_step(episode_id: str):
     if not env:
         raise HTTPException(status_code=404, detail="Environment gone missing.")
         
-    # Get current observation
-    current_obs = env._build_observation(False, 0.0).dict()
+    # Get current observation (with actual historical reward)
+    historical_reward = getattr(env, "_last_reward", 0.0)
+    current_obs = env._build_observation(False, historical_reward).dict()
     
     # --- HERE IS THE MAGIC --- 
     # Let Gemma 4 decide the action!
