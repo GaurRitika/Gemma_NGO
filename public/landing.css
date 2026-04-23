@@ -1056,11 +1056,14 @@ tr:hover td {
 .card-value {
     font-size: 2.5rem;
     font-weight: 500;
-    color: var(--primary);
     display: flex;
     align-items: baseline;
     gap: 0.5rem;
 }
+
+#dupes-count { color: #137333; }
+#missing-count { color: #1967D2; }
+#quality-score { color: #137333; }
 
 .val-sub {
     font-size: 1rem;
@@ -1152,10 +1155,12 @@ tr:hover td {
 .error-text { color: #D93025; font-style: italic; }
 .fixed-text { color: #1E8E3E; }
 
+.error-row { background-color: #FCE8E6; }
+
 /* AI Hub */
 .ai-hub-card {
-    background: #F7FBFA;
-    border: 1px solid #E3EFEC;
+    background: #F0F9FF;
+    border: 1px solid #E0F2FE;
     border-radius: var(--radius-lg);
     padding: 2.5rem;
     display: flex;

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impact - Gemma for Good</title>
+    <!-- Use Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="landing.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body style="background: #F9FAFB;">
+    <div class="noise-overlay"></div>
+    
+    <!-- Navbar -->
+    <nav class="navbar border-bottom" style="background: white;">
+        <div class="nav-brand">
+            <span class="logo-text">Gemma for Good</span>
+        </div>
+        <div class="nav-links">
+            <a href="/ui/index.html">Our Story</a>
+            <a href="/ui/dashboard.html">Upload</a>
+            <a href="#" class="active">Impact</a>
+            <a href="#">Security</a>
+        </div>
+        <div class="nav-actions">
+            <a href="#" class="login-link">Log In</a>
+            <a href="/ui/dashboard.html" class="btn btn-primary">Get Started</a>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="app-dashboard-container" style="max-width: 1200px; margin: 0 auto; padding-bottom: 4rem;">
+        
+        <!-- VISIBLE RESULTS VIEW (Static for Impact Page) -->
+        <main id="results-view" class="results-container" style="animation: none;">
+            <div class="results-hero">
+                <h2 style="color: #12342A;">Cleaning Results</h2>
+                <p>Your data has been processed using Gemma's specialized social impact models.<br>Below is the summary of improvements and the reconciled dataset.</p>
+            </div>
+            
+            <!-- Summary Cards -->
+            <div class="summary-cards-row">
+                <div class="summary-card" style="background: white;">
+                    <div class="card-top">
+                        <i class="fa-solid fa-copy summary-icon"></i>
+                        <span class="pill pill-green">OPTIMIZED</span>
+                    </div>
+                    <div class="card-label">DUPLICATES REMOVED</div>
+                    <div class="card-value"><span id="dupes-count">1,248</span> <span class="val-sub">entries</span></div>
+                </div>
+                
+                <div class="summary-card" style="background: white;">
+                    <div class="card-top">
+                        <i class="fa-solid fa-pen-to-square summary-icon"></i>
+                        <span class="pill pill-blue">RESOLVED</span>
+                    </div>
+                    <div class="card-label">MISSING VALUES FIXED</div>
+                    <div class="card-value"><span id="missing-count">4,912</span> <span class="val-sub">cells</span></div>
+                </div>
+                
+                <div class="summary-card" style="background: white;">
+                    <div class="card-top">
+                        <i class="fa-solid fa-arrow-trend-up summary-icon"></i>
+                        <span class="pill pill-light-green">+24.5%</span>
+                    </div>
+                    <div class="card-label">DATA QUALITY IMPROVED</div>
+                    <div class="card-value"><span id="quality-score">98.2%</span> <span class="val-sub">Total Score</span></div>
+                </div>
+            </div>
+            
+            <!-- Dataset Reconciliation Header -->
+            <div class="reconciliation-header">
+                <h3 style="color: #12342A;">Dataset Reconciliation</h3>
+                <div class="recon-actions">
+                    <button id="export-results-btn" class="btn btn-outline" style="background: white;"><i class="fa-solid fa-download"></i> Export CSV</button>
+                    <button class="btn btn-primary"><i class="fa-solid fa-cloud-arrow-up"></i> Commit to CRM</button>
+                </div>
+            </div>
+            
+            <!-- Comparison Tables -->
+            <div class="comparison-grid">
+                <!-- Before Table -->
+                <div class="table-card before-card">
+                    <div class="comp-header">
+                        <span class="dot red-dot"></span> <h4 style="color: #12342A; font-weight: 500;">Before</h4> <span class="comp-sub" id="before-filename">Source: raw_survey_data.xls</span>
+                    </div>
+                    <div class="comp-table-wrapper" id="before-table-container">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                            <thead>
+                                <tr style="text-align: left; color: #4A635B;">
+                                    <th style="padding: 1rem 1.5rem; font-weight: 400;">UID</th>
+                                    <th style="padding: 1rem 1.5rem; font-weight: 400;">Full Name</th>
+                                    <th style="padding: 1rem 1.5rem; font-weight: 400;">Email Address</th>
+                                    <th style="padding: 1rem 1.5rem; font-weight: 400;">Location</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="error-row">
+                                    <td style="padding: 1rem 1.5rem;">#9021</td>
+                                    <td style="padding: 1rem 1.5rem;">j. smith</td>
+                                    <td style="padding: 1rem 1.5rem;"><span class="error-text">jsmith@@gmail.co</span></td>
+                                    <td style="padding: 1rem 1.5rem;"><span class="error-text">N/A</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 1rem 1.5rem;">#9022</td>
+                                    <td style="padding: 1rem 1.5rem;">Jane Smith</td>
+                                    <td style="padding: 1rem 1.5rem;">jane.smith@gmail.com</td>
+                                    <td style="padding: 1rem 1.5rem;">Nairobi, KE</td>
+                                </tr>
+                                <tr class="error-row">
+                                    <td style="padding: 1rem 1.5rem;">#9023</td>
+                                    <td style="padding: 1rem 1.5rem;"><span class="error-text">MISSING</span></td>
+                                    <td style="padding: 1rem 1.5rem;">m_k@impact.org</td>
+                                    <td style="padding: 1rem 1.5rem;">Lagos</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 1rem 1.5rem;">#9024</td>
+                                    <td style="padding: 1rem 1.5rem;">A. GUPTA</td>
+                                    <td style="padding: 1rem 1.5rem;">agupta@mail.in</td>
+                                    <td style="padding: 1rem 1.5rem;">MUMBAI</td>
+                                </tr>
+                                <tr class="error-row">
+                                    <td style="padding: 1rem 1.5rem;">#9025</td>
+                                    <td style="padding: 1rem 1.5rem;">Sarah Connor</td>
+                                    <td style="padding: 1rem 1.5rem;"><span class="error-text">s.connor(at)host.com</span></td>
+                                    <td style="padding: 1rem 1.5rem;">London</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- After Table -->
+                <div class="table-card after-card" style="background: white;">
+                    <div class="comp-header">
+                        <span class="dot green-dot"></span> <h4 style="color: #12342A; font-weight: 500;">After</h4> <span class="comp-sub green-text">Gemma Refined (AI Agent)</span>
+                    </div>
+                    <div class="comp-table-wrapper" id="after-table-container">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                            <thead>
+                                <tr style="text-align: left; color: #1E8E3E;">
+                                    <th style="padding: 1rem 1.5rem; font-weight: 400;">UID</th>
+                                    <th style="padding: 1rem 1.5rem; font-weight: 400;">Full Name</th>
+                                    <th style="padding: 1rem 1.5rem; font-weight: 400;">Email Address</th>
+                                    <th style="padding: 1rem 1.5rem; font-weight: 400;">Location</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="padding: 1rem 1.5rem;">#9021</td>
+                                    <td style="padding: 1rem 1.5rem;">Jane Smith</td>
+                                    <td style="padding: 1rem 1.5rem;">jane.smith@gmail.com</td>
+                                    <td style="padding: 1rem 1.5rem;">Nairobi, Kenya</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 1rem 1.5rem;">#9023</td>
+                                    <td style="padding: 1rem 1.5rem;"><span class="fixed-text">Marcus Kim</span></td>
+                                    <td style="padding: 1rem 1.5rem;">m_k@impact.org</td>
+                                    <td style="padding: 1rem 1.5rem;">Lagos, Nigeria</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 1rem 1.5rem;">#9024</td>
+                                    <td style="padding: 1rem 1.5rem;">Ananya Gupta</td>
+                                    <td style="padding: 1rem 1.5rem;">agupta@mail.in</td>
+                                    <td style="padding: 1rem 1.5rem;">Mumbai, India</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 1rem 1.5rem;">#9025</td>
+                                    <td style="padding: 1rem 1.5rem;">Sarah Connor</td>
+                                    <td style="padding: 1rem 1.5rem;">s.connor@host.com</td>
+                                    <td style="padding: 1rem 1.5rem;">London, UK</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 1rem 1.5rem;">#9026</td>
+                                    <td style="padding: 1rem 1.5rem;">David Chen</td>
+                                    <td style="padding: 1rem 1.5rem;">d.chen@global.edu</td>
+                                    <td style="padding: 1rem 1.5rem;">Singapore</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Intelligence Hub -->
+            <div class="ai-hub-card">
+                <div class="hub-left">
+                    <div class="hub-title">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> <h4>AI Intelligence Hub</h4>
+                    </div>
+                    <p>Gemma used natural language inference to map the missing "Full Name" for UID #9023 from previous interaction logs found in your shared NGO drive.</p>
+                </div>
+                
+                <div class="hub-right">
+                    <div class="hub-stat">
+                        <div class="stat-label">INFERENCE CONFIDENCE</div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: 94%;"></div>
+                        </div>
+                        <div class="stat-value">94% Average</div>
+                    </div>
+                    
+                    <div class="hub-stat">
+                        <div class="stat-label">STANDARDIZATION APPLIED</div>
+                        <div class="tag-row">
+                            <span class="tag">ISO-3166 Names</span>
+                            <span class="tag">UTF-8 Normal</span>
+                            <span class="tag">Title Case</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+    </div>
+    
+    <!-- Footer -->
+    <footer class="site-footer simple-footer">
+        <div class="footer-bottom">
+            <div class="footer-brand">Gemma for Good</div>
+            <div class="copyright">&copy; 2026 Gemma for Good. Data for human dignity.</div>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">NGO Partners</a>
+                <a href="#">Contact</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

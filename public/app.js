@@ -205,16 +205,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.createElement('tbody');
         data.forEach(row => {
             const tr = document.createElement('tr');
+            let hasError = false;
+            
             Object.values(row).forEach(val => {
                 const td = document.createElement('td');
                 const valStr = (val === null || val === undefined) ? "null" : String(val);
-                if (valStr.toUpperCase() === 'MISSING' || valStr.toUpperCase() === 'N/A' || valStr === 'null') {
-                    td.innerHTML = `<span class="error-text">${valStr}</span>`;
+                
+                if (tableId === 'results-raw-table') {
+                    if (valStr.toUpperCase() === 'MISSING' || valStr.toUpperCase() === 'N/A' || valStr === 'null' || valStr.includes('@@') || valStr.includes('(at)')) {
+                        td.innerHTML = `<span class="error-text">${valStr}</span>`;
+                        hasError = true;
+                    } else {
+                        td.textContent = valStr;
+                    }
+                } else if (tableId === 'results-clean-table') {
+                    // Highlight known corrected values
+                    if (valStr === 'Marcus Kim' || valStr === 'jane.smith@gmail.com' || valStr === 'Jane Smith') {
+                        td.innerHTML = `<span class="fixed-text">${valStr}</span>`;
+                    } else {
+                        td.textContent = valStr;
+                    }
                 } else {
                     td.textContent = valStr;
                 }
                 tr.appendChild(td);
             });
+            
+            if (hasError && tableId === 'results-raw-table') {
+                tr.classList.add('error-row');
+            }
             tbody.appendChild(tr);
         });
         table.appendChild(tbody);
