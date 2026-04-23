@@ -126,40 +126,94 @@
             </div>
         </div>
 
-        <!-- HIDDEN WORKSPACE VIEW (Shown after start is clicked) -->
-        <main id="workspace-view" class="workspace hidden">
-            <!-- Header for workspace -->
-            <div class="workspace-header">
-                <h3>Data Cleaning in Progress</h3>
-                <button id="export-btn" class="btn btn-secondary" disabled>Export Clean CSV</button>
+        <!-- HIDDEN WORKSPACE VIEW (Processing state) -->
+        <main id="workspace-view" class="processing-container hidden">
+            <div class="processing-layout">
+                <!-- Left: Hero & Animated Progress Card -->
+                <div class="processing-left slide-up">
+                    <div class="copilot-badge">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> AI COPILOT ACTIVE
+                    </div>
+                    
+                    <h2 class="processing-hero-title">Refining your impact data for<br>maximum dignity.</h2>
+                    <p class="processing-hero-sub">Gemma is working behind the scenes to ensure your dataset is clean, ethical, and ready for reporting. This process reduces human bias and manual labor.</p>
+                    
+                    <div class="progress-card">
+                        <div class="progress-schema-badge">
+                            <span class="dot green-dot"></span> JSON_SCHEMA_VALID
+                        </div>
+                        
+                        <div class="pulsing-circle-container">
+                            <div class="pulse-ring"></div>
+                            <div class="pulse-ring delay"></div>
+                            <div class="circle-core">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </div>
+                        </div>
+                        
+                        <h3 class="progress-title">Processing Records</h3>
+                        <p class="progress-sub">Estimated time remaining: <span id="time-remaining">12</span> seconds</p>
+                        
+                        <div class="progress-bar-wrapper">
+                            <div class="progress-fill" id="main-progress-fill"></div>
+                        </div>
+                        
+                        <div class="encryption-badge">
+                            <i class="fa-solid fa-lock"></i> AES-256 ENCRYPTED
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Processing Pipeline -->
+                <div class="processing-right slide-up delay-1">
+                    <div class="pipeline-card">
+                        <h3 class="pipeline-title">Processing Pipeline</h3>
+                        
+                        <ul class="pipeline-timeline" id="pipeline-timeline">
+                            <!-- Steps will be updated via JS -->
+                            <li class="timeline-step pending" id="step-1">
+                                <div class="step-icon"><i class="fa-solid fa-check"></i></div>
+                                <div class="step-content">
+                                    <h4>Analyzing dataset structure...</h4>
+                                    <p>Schema detection in progress.</p>
+                                </div>
+                            </li>
+                            
+                            <li class="timeline-step pending" id="step-2">
+                                <div class="step-icon"><i class="fa-solid fa-check"></i></div>
+                                <div class="step-content">
+                                    <h4>Detecting duplicates...</h4>
+                                    <p>Waiting for analysis.</p>
+                                </div>
+                            </li>
+                            
+                            <li class="timeline-step pending" id="step-3">
+                                <div class="step-icon"><i class="fa-solid fa-rotate"></i></div>
+                                <div class="step-content">
+                                    <h4>Fixing missing values...</h4>
+                                    <p>Waiting for analysis.</p>
+                                </div>
+                            </li>
+                            
+                            <li class="timeline-step pending" id="step-4">
+                                <div class="step-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                                <div class="step-content">
+                                    <h4>Standardizing formats...</h4>
+                                    <p>Waiting for analysis.</p>
+                                </div>
+                            </li>
+                        </ul>
+                        
+                        <div class="insight-box">
+                            <i class="fa-solid fa-lightbulb"></i>
+                            <div class="insight-content">
+                                <h5>Gemma's Insight</h5>
+                                <p id="gemma-insight-text">Analyzing dataset patterns to provide recommendations.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="workspace-grid">
-                <!-- Left Data View -->
-                <section class="data-panel card slide-up">
-                    <div class="panel-header">Raw Uploaded Data</div>
-                    <div class="table-container" id="raw-table-container">
-                        <p class="placeholder-text">Please upload a dataset to begin...</p>
-                        <table id="raw-table"></table>
-                    </div>
-                </section>
-
-                <!-- Agent Logs / Center -->
-                <section class="agent-panel card slide-up delay-1">
-                    <div class="panel-header">Assistant Reasoning Log</div>
-                    <div class="logs-container" id="logs-container">
-                        <!-- Logs will populate here -->
-                    </div>
-                </section>
-
-                <!-- Right Data View -->
-                <section class="data-panel card slide-up delay-2">
-                    <div class="panel-header">Standardized Output</div>
-                    <div class="table-container" id="clean-table-container">
-                        <p class="placeholder-text">Awaiting agent completion...</p>
-                        <table id="clean-table"></table>
-                    </div>
-                </section>
         </main>
 
         <!-- HIDDEN RESULTS VIEW (Shown when processing is fully done) -->

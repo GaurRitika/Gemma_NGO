@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const startBtn = document.getElementById('start-btn');
     const exportBtn = document.getElementById('export-btn');
-    const logsContainer = document.getElementById('logs-container');
     const rawTableContainer = document.getElementById('raw-table-container');
     const cleanTableContainer = document.getElementById('clean-table-container');
     
@@ -78,10 +77,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Clear placeholders
-        rawTableContainer.innerHTML = '<table id="raw-table"></table>';
-        cleanTableContainer.innerHTML = '<table id="clean-table"></table>';
-        logsContainer.innerHTML = '';
-        exportBtn.disabled = true;
+        if (rawTableContainer) rawTableContainer.innerHTML = '<table id="raw-table"></table>';
+        if (cleanTableContainer) cleanTableContainer.innerHTML = '<table id="clean-table"></table>';
+        if (exportBtn) exportBtn.disabled = true;
 
         try {
             addLog('SYSTEM', 'Connecting to secure local workspace and interpreting file...');
@@ -102,7 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
             initialRawData = startData.raw_data;
             
             addLog('PROFILE', 'File uploaded. Initial schema inferred successfully.');
-            renderTable('raw-table', startData.raw_data);
+            
+            // Wait briefly to show UI transition before loop
+            await new Promise(r => setTimeout(r, 1000));
             
             // Trigger Agent Loop dynamically
             await runAgentLoop();
@@ -117,10 +117,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Data Download Export ---
-    exportBtn.addEventListener('click', () => {
-        if (!currentEpisodeId) return;
-        window.location.href = `/api/download_csv/${currentEpisodeId}`;
-    });
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            if (!currentEpisodeId) return;
+            window.location.href = `/api/download_csv/${currentEpisodeId}`;
+        });
+    }
 
     if (exportResultsBtn) {
         exportResultsBtn.addEventListener('click', () => {
@@ -130,23 +132,57 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Core Sub Routines ---
+    let actionCounter = 0;
+
     function addLog(action, reason) {
-        const logDiv = document.createElement('div');
-        logDiv.className = 'log-item';
+        console.log(`[${action}] ${reason}`);
         
-        const actionDiv = document.createElement('div');
-        actionDiv.className = 'action';
-        actionDiv.textContent = `[${action}]`;
+        actionCounter++;
+        const progressFill = document.getElementById('main-progress-fill');
+        const timeRemaining = document.getElementById('time-remaining');
         
-        const reasonDiv = document.createElement('div');
-        reasonDiv.className = 'reason';
-        reasonDiv.textContent = reason;
+        // Progress bar simulation
+        let percent = Math.min((actionCounter / 6) * 100, 95);
+        if (progressFill) progressFill.style.width = `${percent}%`;
+        let tr = Math.max(12 - (actionCounter * 2), 1);
+        if (timeRemaining) timeRemaining.textContent = tr;
+
+        // Update timeline logic
+        if (actionCounter === 1) updateTimelineStep(1, reason);
+        else if (actionCounter === 3) updateTimelineStep(2, reason);
+        else if (actionCounter === 4) updateTimelineStep(3, reason);
+        else if (actionCounter >= 5) updateTimelineStep(4, reason);
         
-        logDiv.appendChild(actionDiv);
-        logDiv.appendChild(reasonDiv);
+        // Update Insight Text
+        const insightText = document.getElementById('gemma-insight-text');
+        if (insightText && action !== 'SYSTEM' && action !== 'AGENT_THINKING' && action !== 'SUBMIT_PIPELINE') {
+            insightText.textContent = reason;
+        }
+    }
+
+    function updateTimelineStep(stepNum, reason) {
+        // Mark previous as done
+        for (let i = 1; i < stepNum; i++) {
+            const prevStep = document.getElementById(`step-${i}`);
+            if (prevStep) {
+                prevStep.classList.remove('active', 'pending');
+                prevStep.classList.add('done');
+                const icon = prevStep.querySelector('.step-icon i');
+                if (icon) icon.className = 'fa-solid fa-check';
+            }
+        }
         
-        logsContainer.appendChild(logDiv);
-        logsContainer.scrollTop = logsContainer.scrollHeight;
+        // Mark current as active
+        const currStep = document.getElementById(`step-${stepNum}`);
+        if (currStep) {
+            currStep.classList.remove('pending', 'done');
+            currStep.classList.add('active');
+            const p = currStep.querySelector('p');
+            if (p) p.textContent = reason;
+            
+            const icon = currStep.querySelector('.step-icon i');
+            if (icon) icon.className = 'fa-solid fa-circle-notch fa-spin';
+        }
     }
 
     function renderTable(tableId, data) {
@@ -201,31 +237,34 @@ document.addEventListener('DOMContentLoaded', () => {
             
             addLog(stepData.action, stepData.reason);
             
-            if (stepData.table_data && stepData.table_data.length > 0) {
-                 renderTable('clean-table', stepData.table_data);
-            }
-            
             if (stepData.done) {
                 isDone = true;
                 addLog('SUBMIT_PIPELINE', 'Data standardization sequence successfully verified.');
                 
-                // Hide workspace, show results
-                if (workspaceView && resultsView) {
-                    workspaceView.classList.add('hidden');
-                    resultsView.classList.remove('hidden');
-                }
+                // Force progress bar to 100% and finish all steps
+                const progressFill = document.getElementById('main-progress-fill');
+                if (progressFill) progressFill.style.width = '100%';
+                updateTimelineStep(5, "Completed"); 
                 
-                // Render comparison tables
-                if (initialRawData) renderTable('results-raw-table', initialRawData);
-                if (stepData.table_data) renderTable('results-clean-table', stepData.table_data);
+                // Hide workspace, show results after a tiny delay
+                setTimeout(() => {
+                    if (workspaceView && resultsView) {
+                        workspaceView.classList.add('hidden');
+                        resultsView.classList.remove('hidden');
+                    }
+                    
+                    // Render comparison tables
+                    if (initialRawData) renderTable('results-raw-table', initialRawData);
+                    if (stepData.table_data) renderTable('results-clean-table', stepData.table_data);
+                }, 800);
                 
                 isAgentRunning = false;
             }
             
-            if (document.querySelectorAll('.log-item').length > 18) {
+            if (actionCounter > 18) {
                 addLog('WARN', 'Agent reached maximum execution depth threshold. Halting to preserve resources.');
-                startBtn.textContent = 'Operation Halted';
-                exportBtn.disabled = false;
+                if (startBtn) startBtn.textContent = 'Operation Halted';
+                if (exportBtn) exportBtn.disabled = false;
                 isAgentRunning = false;
                 break;
             }

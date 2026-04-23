@@ -1237,3 +1237,269 @@ tr:hover td {
     font-size: 0.8rem;
     font-weight: 500;
 }
+
+/* --- Processing / Workspace Redesign --- */
+.processing-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    padding-top: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Left Side */
+.copilot-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #EAF0EF;
+    color: #4A635B;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 2rem;
+}
+
+.copilot-badge i {
+    color: var(--primary);
+}
+
+.processing-hero-title {
+    font-size: 3rem;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+    color: #1A2B29;
+}
+
+.processing-hero-sub {
+    font-size: 1.1rem;
+    color: #62726D;
+    margin-bottom: 3rem;
+    line-height: 1.6;
+}
+
+.progress-card {
+    background: linear-gradient(180deg, #FFFFFF 0%, #F5F7F6 100%);
+    border-radius: var(--radius-lg);
+    padding: 3rem;
+    position: relative;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+    text-align: center;
+    overflow: hidden;
+}
+
+.progress-schema-badge {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: white;
+    border-radius: 50px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #3B755F;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* Pulsing Circle Animation */
+.pulsing-circle-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 2rem auto 3rem auto;
+}
+
+.circle-core {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px; height: 80px;
+    background: #3B755F;
+    border-radius: 50%;
+    z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    box-shadow: 0 10px 20px rgba(59, 117, 95, 0.3);
+}
+
+.pulse-ring {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px; height: 120px;
+    background: #EAF0EF;
+    border-radius: 50%;
+    z-index: 1;
+    animation: pulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+.pulse-ring.delay {
+    animation-delay: 1s;
+}
+
+@keyframes pulse {
+    0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.8; }
+    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+}
+
+.progress-title {
+    font-size: 1.5rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.progress-sub {
+    font-size: 0.9rem;
+    color: #62726D;
+    margin-bottom: 2rem;
+}
+
+.progress-bar-wrapper {
+    height: 8px;
+    background: #EAEFEC;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    max-width: 80%;
+    margin-left: auto; margin-right: auto;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #3B755F;
+    width: 10%; /* Will animate */
+    transition: width 1s ease;
+}
+
+.encryption-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #62726D;
+    border: 1px solid #EAEFEC;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+}
+
+/* Right Side Pipeline */
+.pipeline-card {
+    background: #F9FBFA;
+    border: 1px solid #EAEFEC;
+    border-radius: var(--radius-lg);
+    padding: 3rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.pipeline-title {
+    font-size: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.pipeline-timeline {
+    list-style: none;
+    position: relative;
+    flex: 1;
+}
+
+.pipeline-timeline::before {
+    content: '';
+    position: absolute;
+    left: 20px; /* Center of icon */
+    top: 0; bottom: 0;
+    width: 2px;
+    background: #EAEFEC;
+    z-index: 0;
+}
+
+.timeline-step {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.step-icon {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: white;
+    border: 2px solid #EAEFEC;
+    color: #CBD5E1;
+    font-size: 1rem;
+    flex-shrink: 0;
+    transition: all 0.3s;
+}
+
+.step-content {
+    padding-top: 0.5rem;
+}
+
+.step-content h4 {
+    font-size: 1.1rem;
+    color: #62726D;
+    margin-bottom: 0.3rem;
+    transition: color 0.3s;
+}
+
+.step-content p {
+    font-size: 0.85rem;
+    color: #9AA7A4;
+    transition: color 0.3s;
+}
+
+/* Timeline States */
+.timeline-step.active .step-icon {
+    background: #3B755F;
+    border-color: #3B755F;
+    color: white;
+}
+.timeline-step.active .step-content h4 { color: #1A2B29; font-weight: 600; }
+.timeline-step.active .step-content p { color: #62726D; }
+
+.timeline-step.done .step-icon {
+    background: #E6F4EA;
+    border-color: #E6F4EA;
+    color: #137333;
+}
+.timeline-step.done .step-content h4 { color: #137333; }
+
+/* Insight Box */
+.insight-box {
+    background: #DBEAFE; /* Light blue from mockup */
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.insight-box i {
+    color: #1E3A8A;
+    font-size: 1.2rem;
+    margin-top: 0.2rem;
+}
+
+.insight-content h5 {
+    color: #1E3A8A;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.insight-content p {
+    color: #1E3A8A;
+    font-size: 0.9rem;
+    opacity: 0.9;
+    line-height: 1.5;
+}
