@@ -9,6 +9,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const dropzone = document.getElementById('dropzone');
     const csvUploadInput = document.getElementById('csv-upload');
     const dropzoneText = document.getElementById('dropzone-text');
+    const dropzoneTitle = document.getElementById('dropzone-title');
+    const startActionContainer = document.getElementById('start-action-container');
+    const uploadView = document.getElementById('upload-view');
+    const workspaceView = document.getElementById('workspace-view');
     
     if (!startBtn || !dropzone) return; // Exit if not on dashboard page
     
@@ -45,12 +49,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function handleFileUpload(file) {
-        if (!file.name.endsWith('.csv')) {
-            alert("Please upload a valid CSV file formatting.");
+        if (!file.name.endsWith('.csv') && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+            alert("Please upload a valid CSV or Excel file.");
             return;
         }
         uploadedFile = file;
-        dropzoneText.innerHTML = `✅ ${file.name} ready to process.`;
+        if (dropzoneTitle) dropzoneTitle.innerHTML = `✅ ${file.name} ready to process.`;
+        if (dropzoneText) dropzoneText.innerHTML = "Click the button below to begin AI analysis.";
+        if (startActionContainer) startActionContainer.classList.remove('hidden');
         startBtn.classList.remove('hidden');
     }
 
@@ -61,6 +67,12 @@ document.addEventListener('DOMContentLoaded', () => {
         isAgentRunning = true;
         startBtn.textContent = 'Agent Analyzing...';
         startBtn.disabled = true;
+        
+        // Switch views
+        if (uploadView && workspaceView) {
+            uploadView.classList.add('hidden');
+            workspaceView.classList.remove('hidden');
+        }
         
         // Clear placeholders
         rawTableContainer.innerHTML = '<table id="raw-table"></table>';

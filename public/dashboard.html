@@ -3,58 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Data Copilot for NGOs</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <title>Upload - Gemma for Good</title>
+    <!-- Use Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="landing.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="app-container">
-        <!-- Header -->
-        <header class="main-header shadow-sm">
-            <div class="branding">
-                <h1>AI Data Copilot for NGOs</h1>
-                <p>Autonomous, privacy-first data engineering built on Gemma 4.</p>
+    <div class="noise-overlay"></div>
+    
+    <!-- Navbar -->
+    <nav class="navbar border-bottom">
+        <div class="nav-brand">
+            <span class="logo-text">Gemma for Good</span>
+        </div>
+        <div class="nav-links">
+            <a href="/ui/index.html">Our Story</a>
+            <a href="#" class="active">Upload</a>
+            <a href="#">Impact</a>
+            <a href="#">Security</a>
+        </div>
+        <div class="nav-actions">
+            <a href="#" class="login-link">Log In</a>
+            <a href="/ui/index.html" class="btn btn-primary">Get Started</a>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="app-dashboard-container">
+        
+        <!-- INITIAL UPLOAD VIEW -->
+        <div id="upload-view">
+            <!-- Hero Section -->
+            <div class="upload-hero">
+                <h2>Upload your donor, volunteer,<br>or campaign data</h2>
+                <p>Gemma uses ethical AI to help you understand your impact. Your data stays<br>private and secure through every step.</p>
+            </div>
+
+            <!-- Upload Grid -->
+            <div class="upload-grid">
+                <!-- Dropzone Area -->
+                <div class="upload-main-card">
+                    <div id="dropzone" class="dropzone-area">
+                        <input type="file" id="csv-upload" accept=".csv" style="opacity: 0; position: absolute; width: 0; height: 0; z-index: -1;">
+                        
+                        <div class="upload-icon-circle">
+                            <i class="fa-solid fa-file-arrow-up"></i>
+                        </div>
+                        
+                        <h3 id="dropzone-title">Drop your CSV or Excel file here</h3>
+                        <p id="dropzone-text" class="dropzone-sub">or click to browse from your computer</p>
+                        
+                        <div class="supported-pill">
+                            <i class="fa-solid fa-file-lines"></i> Supported: .csv, .xlsx, .xls
+                        </div>
+                        
+                        <label for="csv-upload" class="hidden-label-overlay"></label>
+                        
+                        <!-- The start button that will appear after upload -->
+                        <div id="start-action-container" class="hidden mt-3">
+                            <button id="start-btn" class="btn btn-primary btn-large">Start Cleaning Data</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar Cards -->
+                <div class="upload-sidebar">
+                    <!-- Privacy Card -->
+                    <div class="sidebar-card privacy-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-shield-halved"></i> <h4>Data Privacy</h4>
+                        </div>
+                        <p>We use industry-standard encryption. Your sensitive information is scrubbed before processing to ensure total donor anonymity.</p>
+                    </div>
+
+                    <!-- Guidelines Card -->
+                    <div class="sidebar-card guidelines-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-lightbulb icon-green"></i> <h4>Quick Guidelines</h4>
+                        </div>
+                        <ul class="guidelines-list">
+                            <li><i class="fa-solid fa-circle-check"></i> Header row required</li>
+                            <li><i class="fa-solid fa-circle-check"></i> Max file size: 50MB</li>
+                            <li><i class="fa-solid fa-circle-check"></i> Multiple sheets supported</li>
+                        </ul>
+                    </div>
+
+                    <!-- Template Card -->
+                    <div class="sidebar-card template-card">
+                        <div class="template-overlay">
+                            <h4>Need a template?</h4>
+                            <a href="#" class="template-link">Download CSV Sample</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Integrations Row -->
+            <div class="integrations-row">
+                <div class="integration-card">
+                    <div class="int-icon"><i class="fa-solid fa-file-excel"></i></div>
+                    <div class="int-text">
+                        <h4>Sync Google Sheets</h4>
+                        <p>Automatic updates</p>
+                    </div>
+                </div>
+                <div class="integration-card">
+                    <div class="int-icon"><i class="fa-solid fa-code"></i></div>
+                    <div class="int-text">
+                        <h4>Connect via API</h4>
+                        <p>For large enterprises</p>
+                    </div>
+                </div>
+                <div class="integration-card">
+                    <div class="int-icon"><i class="fa-solid fa-circle-question"></i></div>
+                    <div class="int-text">
+                        <h4>Formatting help</h4>
+                        <p>Talk to an expert</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HIDDEN WORKSPACE VIEW (Shown after start is clicked) -->
+        <main id="workspace-view" class="workspace hidden">
+            <!-- Header for workspace -->
+            <div class="workspace-header">
+                <h3>Data Cleaning in Progress</h3>
+                <button id="export-btn" class="btn btn-secondary" disabled>Export Clean CSV</button>
             </div>
             
-            <div class="controls">
-                <div id="dropzone" class="dropzone">
-                    <input type="file" id="csv-upload" accept=".csv" style="opacity: 0; position: absolute; width: 0; height: 0; z-index: -1;">
-                    <p id="dropzone-text">📂 Drag & Drop messy donor CSV here or <label for="csv-upload" class="file-label">browse</label></p>
-                </div>
-                <button id="start-btn" class="primary-btn hidden">Start Cleaning Data</button>
-                <button id="export-btn" class="secondary-btn" disabled>Export Clean CSV</button>
+            <div class="workspace-grid">
+                <!-- Left Data View -->
+                <section class="data-panel card slide-up">
+                    <div class="panel-header">Raw Uploaded Data</div>
+                    <div class="table-container" id="raw-table-container">
+                        <p class="placeholder-text">Please upload a dataset to begin...</p>
+                        <table id="raw-table"></table>
+                    </div>
+                </section>
+
+                <!-- Agent Logs / Center -->
+                <section class="agent-panel card slide-up delay-1">
+                    <div class="panel-header">Assistant Reasoning Log</div>
+                    <div class="logs-container" id="logs-container">
+                        <!-- Logs will populate here -->
+                    </div>
+                </section>
+
+                <!-- Right Data View -->
+                <section class="data-panel card slide-up delay-2">
+                    <div class="panel-header">Standardized Output</div>
+                    <div class="table-container" id="clean-table-container">
+                        <p class="placeholder-text">Awaiting agent completion...</p>
+                        <table id="clean-table"></table>
+                    </div>
+                </section>
             </div>
-        </header>
-
-        <!-- Main Workspace -->
-        <main class="workspace">
-            <!-- Left Data View -->
-            <section class="data-panel card slide-up">
-                <h2>Raw Uploaded Data</h2>
-                <div class="table-container" id="raw-table-container">
-                    <p class="placeholder-text">Please upload a dataset to begin...</p>
-                    <table id="raw-table"></table>
-                </div>
-            </section>
-
-            <!-- Agent Logs / Center -->
-            <section class="agent-panel card slide-up delay-1">
-                <h2>Assistant Reasoning Log</h2>
-                <div class="logs-container" id="logs-container">
-                    <!-- Logs will populate here -->
-                </div>
-            </section>
-
-            <!-- Right Data View -->
-            <section class="data-panel card slide-up delay-2">
-                <h2>Standardized Output</h2>
-                <div class="table-container" id="clean-table-container">
-                    <p class="placeholder-text">Awaiting agent completion...</p>
-                    <table id="clean-table"></table>
-                </div>
-            </section>
         </main>
+
     </div>
+    
+    <!-- Footer simplified -->
+    <footer class="site-footer simple-footer">
+        <div class="footer-bottom">
+            <div class="footer-brand">Gemma for Good</div>
+            <div class="copyright">&copy; 2026 Gemma for Good. Data for human dignity.</div>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">NGO Partners</a>
+                <a href="#">Contact</a>
+            </div>
+        </div>
+    </footer>
+
     <script src="app.js"></script>
 </body>
 </html>
