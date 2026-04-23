@@ -985,3 +985,255 @@ tr:hover td {
     font-style: italic;
     font-weight: 300;
 }
+
+/* --- Results View Styles --- */
+.results-container {
+    padding-top: 1rem;
+    animation: fadeIn 0.5s ease;
+}
+
+.results-hero {
+    margin-bottom: 3rem;
+}
+
+.results-hero h2 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.results-hero p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+/* Summary Cards */
+.summary-cards-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 4rem;
+}
+
+.summary-card {
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    padding: 2rem;
+    box-shadow: var(--shadow-soft);
+}
+
+.card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.summary-icon {
+    font-size: 1.2rem;
+    color: var(--primary);
+}
+
+.pill {
+    padding: 0.3rem 0.8rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.pill-green { background: #E6F4EA; color: #137333; }
+.pill-blue { background: #E8F0FE; color: #1967D2; }
+.pill-light-green { background: #CEEAD6; color: #0D652D; }
+
+.card-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.card-value {
+    font-size: 2.5rem;
+    font-weight: 500;
+    color: var(--primary);
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.val-sub {
+    font-size: 1rem;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+/* Reconciliation Tables */
+.reconciliation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.reconciliation-header h3 {
+    font-size: 1.5rem;
+}
+
+.recon-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 4rem;
+}
+
+.table-card {
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    border: 1px solid #EAEFEC;
+    overflow: hidden;
+}
+
+.before-card {
+    background: #F8F9F8;
+}
+
+.comp-header {
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid #EAEFEC;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.comp-header h4 {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.comp-sub {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-left: auto;
+}
+
+.green-text { color: var(--accent-green); }
+
+.dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+}
+.red-dot { background: #D93025; }
+.green-dot { background: #1E8E3E; }
+
+.comp-table-wrapper {
+    height: 400px;
+    overflow: auto;
+}
+
+.comp-table-wrapper table {
+    width: 100%;
+}
+
+.comp-table-wrapper th {
+    background: transparent;
+    padding: 1rem 1.5rem;
+}
+
+.comp-table-wrapper td {
+    padding: 1rem 1.5rem;
+}
+
+.error-text { color: #D93025; font-style: italic; }
+.fixed-text { color: #1E8E3E; }
+
+/* AI Hub */
+.ai-hub-card {
+    background: #F7FBFA;
+    border: 1px solid #E3EFEC;
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    display: flex;
+    gap: 4rem;
+    margin-bottom: 4rem;
+}
+
+.hub-left {
+    flex: 1;
+}
+
+.hub-title {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+    color: #12342A;
+}
+
+.hub-title h4 {
+    font-size: 1.3rem;
+}
+
+.hub-title i {
+    color: #3B755F;
+}
+
+.hub-left p {
+    color: #4A635B;
+    line-height: 1.6;
+}
+
+.hub-right {
+    flex: 1;
+    display: flex;
+    gap: 3rem;
+}
+
+.hub-stat {
+    flex: 1;
+}
+
+.hub-stat .stat-label {
+    font-size: 0.75rem;
+    color: #3B755F;
+    font-weight: 700;
+    margin-bottom: 0.8rem;
+}
+
+.progress-bar-container {
+    height: 8px;
+    background: #E3EFEC;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: #3B755F;
+}
+
+.hub-stat .stat-value {
+    font-weight: 600;
+    color: #12342A;
+}
+
+.tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tag {
+    background: #E3EFEC;
+    color: #3B755F;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}

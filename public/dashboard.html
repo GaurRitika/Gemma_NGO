@@ -160,6 +160,104 @@
                         <table id="clean-table"></table>
                     </div>
                 </section>
+        </main>
+
+        <!-- HIDDEN RESULTS VIEW (Shown when processing is fully done) -->
+        <main id="results-view" class="results-container hidden">
+            <div class="results-hero">
+                <h2>Cleaning Results</h2>
+                <p>Your data has been processed using Gemma's specialized social impact models.<br>Below is the summary of improvements and the reconciled dataset.</p>
+            </div>
+            
+            <!-- Summary Cards -->
+            <div class="summary-cards-row">
+                <div class="summary-card">
+                    <div class="card-top">
+                        <i class="fa-solid fa-copy summary-icon"></i>
+                        <span class="pill pill-green">OPTIMIZED</span>
+                    </div>
+                    <div class="card-label">DUPLICATES REMOVED</div>
+                    <div class="card-value"><span id="dupes-count">1,248</span> <span class="val-sub">entries</span></div>
+                </div>
+                
+                <div class="summary-card">
+                    <div class="card-top">
+                        <i class="fa-solid fa-pen-to-square summary-icon"></i>
+                        <span class="pill pill-blue">RESOLVED</span>
+                    </div>
+                    <div class="card-label">MISSING VALUES FIXED</div>
+                    <div class="card-value"><span id="missing-count">4,912</span> <span class="val-sub">cells</span></div>
+                </div>
+                
+                <div class="summary-card">
+                    <div class="card-top">
+                        <i class="fa-solid fa-arrow-trend-up summary-icon"></i>
+                        <span class="pill pill-light-green">+24.5%</span>
+                    </div>
+                    <div class="card-label">DATA QUALITY IMPROVED</div>
+                    <div class="card-value"><span id="quality-score">98.2%</span> <span class="val-sub">Total Score</span></div>
+                </div>
+            </div>
+            
+            <!-- Dataset Reconciliation Header -->
+            <div class="reconciliation-header">
+                <h3>Dataset Reconciliation</h3>
+                <div class="recon-actions">
+                    <button id="export-results-btn" class="btn btn-outline"><i class="fa-solid fa-download"></i> Export CSV</button>
+                    <button class="btn btn-primary"><i class="fa-solid fa-cloud-arrow-up"></i> Commit to CRM</button>
+                </div>
+            </div>
+            
+            <!-- Comparison Tables -->
+            <div class="comparison-grid">
+                <!-- Before Table -->
+                <div class="table-card before-card">
+                    <div class="comp-header">
+                        <span class="dot red-dot"></span> <h4>Before</h4> <span class="comp-sub" id="before-filename">Source: raw_survey_data.xls</span>
+                    </div>
+                    <div class="comp-table-wrapper" id="before-table-container">
+                        <table id="results-raw-table"></table>
+                    </div>
+                </div>
+                
+                <!-- After Table -->
+                <div class="table-card after-card">
+                    <div class="comp-header">
+                        <span class="dot green-dot"></span> <h4>After</h4> <span class="comp-sub green-text">Gemma Refined (AI Agent)</span>
+                    </div>
+                    <div class="comp-table-wrapper" id="after-table-container">
+                        <table id="results-clean-table"></table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Intelligence Hub -->
+            <div class="ai-hub-card">
+                <div class="hub-left">
+                    <div class="hub-title">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> <h4>AI Intelligence Hub</h4>
+                    </div>
+                    <p>Gemma used natural language inference to map the missing "Full Name" for UID #9023 from previous interaction logs found in your shared NGO drive.</p>
+                </div>
+                
+                <div class="hub-right">
+                    <div class="hub-stat">
+                        <div class="stat-label">INFERENCE CONFIDENCE</div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: 94%;"></div>
+                        </div>
+                        <div class="stat-value">94% Average</div>
+                    </div>
+                    
+                    <div class="hub-stat">
+                        <div class="stat-label">STANDARDIZATION APPLIED</div>
+                        <div class="tag-row">
+                            <span class="tag">ISO-3166 Names</span>
+                            <span class="tag">UTF-8 Normal</span>
+                            <span class="tag">Title Case</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
 

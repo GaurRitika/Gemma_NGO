@@ -13,12 +13,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const startActionContainer = document.getElementById('start-action-container');
     const uploadView = document.getElementById('upload-view');
     const workspaceView = document.getElementById('workspace-view');
+    const resultsView = document.getElementById('results-view');
+    const exportResultsBtn = document.getElementById('export-results-btn');
     
     if (!startBtn || !dropzone) return; // Exit if not on dashboard page
     
     let isAgentRunning = false;
     let currentEpisodeId = null;
     let uploadedFile = null;
+    let initialRawData = null;
 
     // --- Drag and Drop Logic ---
     dropzone.addEventListener('dragenter', (e) => {
@@ -96,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const startData = await res.json();
             
             currentEpisodeId = startData.episode_id;
+            initialRawData = startData.raw_data;
             
             addLog('PROFILE', 'File uploaded. Initial schema inferred successfully.');
             renderTable('raw-table', startData.raw_data);
@@ -117,6 +121,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentEpisodeId) return;
         window.location.href = `/api/download_csv/${currentEpisodeId}`;
     });
+
+    if (exportResultsBtn) {
+        exportResultsBtn.addEventListener('click', () => {
+            if (!currentEpisodeId) return;
+            window.location.href = `/api/download_csv/${currentEpisodeId}`;
+        });
+    }
 
     // --- Core Sub Routines ---
     function addLog(action, reason) {
@@ -160,7 +171,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const tr = document.createElement('tr');
             Object.values(row).forEach(val => {
                 const td = document.createElement('td');
-                td.textContent = (val === null || val === undefined) ? "null" : String(val);
+                const valStr = (val === null || val === undefined) ? "null" : String(val);
+                if (valStr.toUpperCase() === 'MISSING' || valStr.toUpperCase() === 'N/A' || valStr === 'null') {
+                    td.innerHTML = `<span class="error-text">${valStr}</span>`;
+                } else {
+                    td.textContent = valStr;
+                }
                 tr.appendChild(td);
             });
             tbody.appendChild(tr);
@@ -192,10 +208,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (stepData.done) {
                 isDone = true;
                 addLog('SUBMIT_PIPELINE', 'Data standardization sequence successfully verified.');
-                startBtn.textContent = 'Data is Clean!';
-                exportBtn.disabled = false;
-                exportBtn.classList.add('primary-btn');
-                exportBtn.classList.remove('secondary-btn');
+                
+                // Hide workspace, show results
+                if (workspaceView && resultsView) {
+                    workspaceView.classList.add('hidden');
+                    resultsView.classList.remove('hidden');
+                }
+                
+                // Render comparison tables
+                if (initialRawData) renderTable('results-raw-table', initialRawData);
+                if (stepData.table_data) renderTable('results-clean-table', stepData.table_data);
+                
                 isAgentRunning = false;
             }
             
