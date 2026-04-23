@@ -3,58 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Data Copilot for NGOs</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <title>Gemma for Good - AI Data Cleaning for NGOs</title>
+    <!-- Use Google Fonts: Outfit for a modern, friendly tech feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="landing.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="app-container">
-        <!-- Header -->
-        <header class="main-header shadow-sm">
-            <div class="branding">
-                <h1>AI Data Copilot for NGOs</h1>
-                <p>Autonomous, privacy-first data engineering built on Gemma 4.</p>
+    <div class="noise-overlay"></div>
+    
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo-text">Gemma for Good</span>
+        </div>
+        <div class="nav-links">
+            <a href="#" class="active">Our Story</a>
+            <a href="/ui/dashboard.html">Upload</a>
+            <a href="#">Impact</a>
+            <a href="#">Security</a>
+        </div>
+        <div class="nav-actions">
+            <a href="#" class="login-link">Log In</a>
+            <a href="/ui/dashboard.html" class="btn btn-primary">Get Started</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="hero-content">
+            <div class="badge">
+                <i class="fa-solid fa-shield-halved"></i> Private, Local AI for Social Good
+            </div>
+            <h1>From Messy Data to <br><span class="highlight">Meaningful Impact</span></h1>
+            <p>AI-powered data cleaning for NGOs — private, local, and intelligent. Turn fragmented records into clear stories of change.</p>
+            <div class="hero-buttons">
+                <a href="/ui/dashboard.html" class="btn btn-primary btn-large">Start Cleaning Data</a>
+                <a href="#" class="btn btn-secondary btn-large">See Our Impact</a>
+            </div>
+        </div>
+        
+        <div class="hero-graphics">
+            <!-- Background glow behind graphics -->
+            <div class="hero-glow"></div>
+            
+            <!-- Mockup Graphics built with CSS/HTML -->
+            <div class="mockup-card doc-mockup float-animation-1">
+                <div class="mockup-header">
+                    <i class="fa-solid fa-file-csv"></i> raw_untidy_data_v2.csv
+                </div>
+                <div class="mockup-body">
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" style="width: 80%"></div>
+                    <div class="skeleton-line" style="width: 90%"></div>
+                    <div class="skeleton-line" style="width: 60%"></div>
+                    <div class="skeleton-row">
+                        <div class="skeleton-pill error"></div>
+                        <div class="skeleton-pill"></div>
+                    </div>
+                </div>
             </div>
             
-            <div class="controls">
-                <div id="dropzone" class="dropzone">
-                    <input type="file" id="csv-upload" accept=".csv" style="opacity: 0; position: absolute; width: 0; height: 0; z-index: -1;">
-                    <p id="dropzone-text">📂 Drag & Drop messy donor CSV here or <label for="csv-upload" class="file-label">browse</label></p>
+            <div class="mockup-card chart-mockup float-animation-2">
+                <div class="mockup-header-flex">
+                    <div class="icon-circle"><i class="fa-solid fa-chart-simple"></i></div>
+                    <span class="chart-title">Impact Tracker</span>
+                    <div class="skeleton-line short-right"></div>
                 </div>
-                <button id="start-btn" class="primary-btn hidden">Start Cleaning Data</button>
-                <button id="export-btn" class="secondary-btn" disabled>Export Clean CSV</button>
+                <div class="chart-bars">
+                    <div class="bar h-40"></div>
+                    <div class="bar h-60"></div>
+                    <div class="bar h-30"></div>
+                    <div class="bar h-80 dark"></div>
+                    <div class="bar h-50"></div>
+                </div>
+                <div class="chart-stats">
+                    <div class="stat">
+                        <span class="label">FAMILIES HELPED</span>
+                        <span class="value">1,240</span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">REGIONS ACTIVE</span>
+                        <span class="value">12</span>
+                    </div>
+                </div>
+                
+                <!-- Magic wand icon overlapping -->
+                <div class="magic-icon-badge hover-pulse">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <!-- Main Workspace -->
-        <main class="workspace">
-            <!-- Left Data View -->
-            <section class="data-panel card slide-up">
-                <h2>Raw Uploaded Data</h2>
-                <div class="table-container" id="raw-table-container">
-                    <p class="placeholder-text">Please upload a dataset to begin...</p>
-                    <table id="raw-table"></table>
-                </div>
-            </section>
+    <!-- Features Section -->
+    <section class="features">
+        <div class="section-header">
+            <h2>Empowering NGOs with Dignity-First Tech</h2>
+            <p>We believe technology should serve people, not just processes. Gemma is designed for the front lines of social impact.</p>
+        </div>
 
-            <!-- Agent Logs / Center -->
-            <section class="agent-panel card slide-up delay-1">
-                <h2>Assistant Reasoning Log</h2>
-                <div class="logs-container" id="logs-container">
-                    <!-- Logs will populate here -->
+        <div class="feature-grid">
+            <!-- Feature 1 -->
+            <div class="feature-card f-privacy hover-lift">
+                <div class="icon-wrapper blue-icon">
+                    <i class="fa-solid fa-shield"></i>
                 </div>
-            </section>
+                <h3>Privacy That Protects Vulnerable Communities</h3>
+                <p>Your data never leaves your device. Gemma runs locally, ensuring that sensitive beneficiary information is never exposed to the cloud.</p>
+            </div>
+            
+            <!-- Feature 2 (Image overlay style) -->
+            <div class="feature-card f-image hover-lift">
+                <!-- Utilizing CSS gradients for a forest abstract look if image is missing -->
+                <div class="image-bg abstract-forest"></div>
+                <div class="glass-overlay">
+                    <div class="leaf-shape"></div>
+                </div>
+            </div>
+            
+            <!-- Feature 3 (Solid Green) -->
+            <div class="feature-card f-humans dark-bg hover-lift">
+                <div class="icon-wrapper white-icon">
+                    <i class="fa-solid fa-hand-holding-heart"></i>
+                </div>
+                <h3>Built for Humans</h3>
+                <p>No coding required. If you can drag and drop a file, you can use Gemma.</p>
+            </div>
+            
+            <!-- Feature 4 -->
+            <div class="feature-card f-context hover-lift">
+                <div class="icon-wrapper blue-icon">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                </div>
+                <h3>Contextual Intelligence</h3>
+                <p>Gemma understands the nuances of social work data, from misspelled village names to inconsistent dates.</p>
+                <div class="accuracy-badge">
+                    <i class="fa-solid fa-bolt"></i> 99% Accuracy Rate
+                </div>
+            </div>
+            
+            <!-- Feature 5 -->
+            <div class="feature-card f-story wide-card hover-lift">
+                <div class="story-content">
+                    <h3>Focus on the Story, Not the Spreadsheet</h3>
+                    <p>Save hundreds of hours annually on data entry and cleaning, allowing your team to spend more time where it matters: with the community.</p>
+                    <div class="stats-row">
+                        <div class="stat-item">
+                            <span class="big-num">400+</span>
+                            <span class="stat-label">NGO Partners</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="big-num highlight-num">20M</span>
+                            <span class="stat-label">Records Cleaned</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="story-image abstract-people"></div>
+            </div>
+        </div>
+    </section>
 
-            <!-- Right Data View -->
-            <section class="data-panel card slide-up delay-2">
-                <h2>Standardized Output</h2>
-                <div class="table-container" id="clean-table-container">
-                    <p class="placeholder-text">Awaiting agent completion...</p>
-                    <table id="clean-table"></table>
+    <!-- Testimonial Section -->
+    <section class="testimonial-section">
+        <div class="testimonial-card">
+            <div class="quote-mark">"</div>
+            <blockquote>
+                Before Gemma, our staff spent 20 hours a week just fixing spreadsheets. Now, they're in the field with families, and we have the data to prove our impact to donors in real-time.
+            </blockquote>
+            <div class="author-info">
+                <div class="avatar">
+                    <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=22473D&color=fff&size=120&font-size=0.33" alt="Sarah Jenkins">
                 </div>
-            </section>
-        </main>
-    </div>
-    <script src="app.js"></script>
+                <div class="author-details">
+                    <span class="name">Sarah Jenkins</span>
+                    <span class="title">Executive Director, Clean Water Initiative</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA & Footer -->
+    <footer class="site-footer">
+        <div class="footer-cta">
+            <div class="cta-icon-wrapper">
+                <i class="fa-solid fa-hand-holding-medical"></i>
+            </div>
+            <h2>Ready to tell a clearer story?</h2>
+            <p>Join hundreds of NGOs using Gemma for Good to amplify their impact through intelligent, private data management.</p>
+            <div class="cta-buttons">
+                <a href="/ui/dashboard.html" class="btn btn-primary btn-large">Start Cleaning Data</a>
+                <a href="#" class="btn btn-outline btn-large">Contact Support</a>
+            </div>
+            <p class="free-tier-note">Free forever for non-profits under 50 employees.</p>
+        </div>
+        
+        <div class="footer-bottom">
+            <div class="footer-brand">Gemma for Good</div>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">NGO Partners</a>
+                <a href="#">Contact</a>
+            </div>
+            <div class="footer-social">
+                <a href="#"><i class="fa-solid fa-globe"></i></a>
+                <a href="#"><i class="fa-solid fa-share-nodes"></i></a>
+            </div>
+        </div>
+        <div class="copyright">
+            &copy; 2026 Gemma for Good. Data for human dignity.
+        </div>
+    </footer>
 </body>
 </html>

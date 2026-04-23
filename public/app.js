@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const csvUploadInput = document.getElementById('csv-upload');
     const dropzoneText = document.getElementById('dropzone-text');
     
+    if (!startBtn || !dropzone) return; // Exit if not on dashboard page
+    
     let isAgentRunning = false;
     let currentEpisodeId = null;
     let uploadedFile = null;
