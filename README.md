@@ -1,4 +1,4 @@
-# 🌍 Gemma 4 CRM Cleanup Copilot
+# 🌍 Gemma_NGO
 
 > **Submission for the Gemma 4 Good Hackathon**  
 > **Impact Track:** Safety & Trust / Digital Equity & Inclusivity  
