@@ -70,7 +70,7 @@ Experience the "Wow" factor yourself. We have provided a **Super Messy Dataset**
 3.  **Run the Backend**:
     ```bash
     python -m server.app
-    ```
+    ```    
 
 ### 🧪 Step 3: Run the Test
 1.  Open `http://localhost:8080/ui/dashboard.html`.
@@ -78,6 +78,12 @@ Experience the "Wow" factor yourself. We have provided a **Super Messy Dataset**
 3.  Click **"Start Cleaning Data"** and watch Gemma for Good autonomously restore order to the chaos.
 
 ---
+
+
+### See the Impact
+
+<img width="1745" height="810" alt="image" src="https://github.com/user-attachments/assets/dfac9e71-1dcc-48e8-b9d1-4ca0bfb6415c" />
+
 
 ## 🔮 Future Vision: Edge Intelligence for Human Stories
 Our roadmap involves optimizing this pipeline using **Google AI Edge's LiteRT**. We want this to run on a $20 smartphone in an offline environment, empowering a social worker in the field to tell a clearer story of impact.
