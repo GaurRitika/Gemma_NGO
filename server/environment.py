@@ -88,7 +88,20 @@ class CRMDataPipelineEnv(Environment):
         
         self._current_view = "Select a source to view."
         self._last_feedback = f"Environment reset natively for task {task_id}. Episode UUID: {episode_id}"
-        self._report = None 
+        
+        # Auto-profile immediately so Gemma can see columns instead of guessing
+        source_name = list(self._sources.keys())[0] if self._sources else ""
+        if source_name:
+            df = self._sources[source_name]
+            null_counts = df.isnull().sum().to_dict()
+            types = df.dtypes.astype(str).to_dict()
+            report = []
+            for col in df.columns:
+                report.append(f"- **{col}**: type={types[col]}, nulls={null_counts[col]}")
+            self._report = "\n".join(report)
+        else:
+            self._report = None
+            
         self._last_action = None
         
         self._last_action = None
@@ -121,7 +134,16 @@ class CRMDataPipelineEnv(Environment):
         
         self._current_view = "Select a source to view."
         self._last_feedback = f"Environment reset natively for Real Mode upload. Episode UUID: {episode_id}"
-        self._report = None 
+        
+        # Auto-profile immediately so Gemma can see columns instead of guessing
+        df = self._sources[source_name]
+        null_counts = df.isnull().sum().to_dict()
+        types = df.dtypes.astype(str).to_dict()
+        report = []
+        for col in df.columns:
+            report.append(f"- **{col}**: type={types[col]}, nulls={null_counts[col]}")
+        self._report = "\n".join(report)
+        
         self._last_action = None
         
         obs = self._build_observation(done=False, reward=0.0) 
@@ -190,11 +212,26 @@ class CRMDataPipelineEnv(Environment):
             "t3": "Merge Volunteer Portal, Donation Forms, Legacy NGO databases",
             "real_data": "Clean and format custom uploaded dataset"
         }.get(self._task_id, "Unknown task")
-        
-        # MAGIC: Always let the agent peek at the data so it doesn't guess blindly!
-        df_target = self._sources.get("user_upload", self._sources.get("donation_forms", pd.DataFrame()))
+
+        # ── Always regenerate the quality report from ALL sources (live) ──
+        # This ensures Gemma sees dirty columns across every table, not just
+        # a stale snapshot from the initial reset.
+        all_reports = []
+        for src_name, df in self._sources.items():
+            null_counts = df.isnull().sum().to_dict()
+            types = df.dtypes.astype(str).to_dict()
+            all_reports.append(f"### Source: {src_name} ({len(df)} rows)")
+            for col in df.columns:
+                all_reports.append(
+                    f"- **{col}**: type={types[col]}, nulls={null_counts[col]}"
+                )
+        live_report = "\n".join(all_reports)
+
+        # Also expose a sample of the first/primary source for context
+        primary_src = list(self._sources.keys())[0] if self._sources else ""
+        df_target = self._sources.get(primary_src, pd.DataFrame())
         dynamic_view = df_target.head(3).to_dict(orient="records") if not df_target.empty else "No records"
-        
+
         return CRMPipelineObservation(
             done=done,
             reward=reward,
@@ -202,7 +239,7 @@ class CRMDataPipelineEnv(Environment):
             schema_target=self._schema_target,
             available_sources=list(self._sources.keys()),
             current_view=str(dynamic_view),
-            data_quality_report=self._report if self._report else "",
+            data_quality_report=live_report,
             last_action_feedback=self._last_feedback,
             conflict_rules=self._conflict_rules if self._conflict_rules else None
         )
@@ -242,6 +279,39 @@ class CRMDataPipelineEnv(Environment):
         col = self._get_col(df, action.column)
         strat = action.standardization_strategy
         
+        # VALIDATION: Prevent wrong strategy application
+        col_lower = col.lower()
+        
+        # Detect email columns
+        if any(keyword in col_lower for keyword in ['email', 'e-mail', 'mail', 'contact']):
+            if strat in ["EXTRACT_NUMBERS", StandardizationStrategy.EXTRACT_NUMBERS.value]:
+                self._last_feedback = f"BLOCKED: Cannot use EXTRACT_NUMBERS on email column '{col}'. Use LOWERCASE_STRIP instead!"
+                return -0.2
+            if strat in ["TO_DATETIME_ISO", StandardizationStrategy.TO_DATETIME_ISO.value]:
+                self._last_feedback = f"BLOCKED: Cannot use TO_DATETIME_ISO on email column '{col}'. Use LOWERCASE_STRIP instead!"
+                return -0.2
+        
+        # Detect phone columns
+        if any(keyword in col_lower for keyword in ['phone', 'mobile', 'tel', 'contact_number']):
+            if strat in ["TO_DATETIME_ISO", StandardizationStrategy.TO_DATETIME_ISO.value]:
+                self._last_feedback = f"BLOCKED: Cannot use TO_DATETIME_ISO on phone column '{col}'. Use EXTRACT_NUMBERS instead!"
+                return -0.2
+        
+        # Detect date columns
+        if any(keyword in col_lower for keyword in ['date', 'time', 'created', 'updated', 'signup', 'registration']):
+            if strat in ["EXTRACT_NUMBERS", StandardizationStrategy.EXTRACT_NUMBERS.value]:
+                self._last_feedback = f"BLOCKED: Cannot use EXTRACT_NUMBERS on date column '{col}'. Use TO_DATETIME_ISO instead!"
+                return -0.2
+        
+        # Detect name columns
+        if any(keyword in col_lower for keyword in ['name', 'donor', 'volunteer', 'contact', 'person']):
+            if strat in ["EXTRACT_NUMBERS", StandardizationStrategy.EXTRACT_NUMBERS.value]:
+                self._last_feedback = f"BLOCKED: Cannot use EXTRACT_NUMBERS on name column '{col}'. Use LOWERCASE_STRIP instead!"
+                return -0.2
+            if strat in ["TO_DATETIME_ISO", StandardizationStrategy.TO_DATETIME_ISO.value]:
+                self._last_feedback = f"BLOCKED: Cannot use TO_DATETIME_ISO on name column '{col}'. Use LOWERCASE_STRIP instead!"
+                return -0.2
+        
         # Heuristic reward: measure how many values changed to "better" format
         # without leaking Ground Truth.
         change_count = 0
@@ -250,19 +320,51 @@ class CRMDataPipelineEnv(Environment):
         if strat == StandardizationStrategy.LOWERCASE_STRIP.value or strat == "LOWERCASE_STRIP":
             # Check if strings are already lowercase/stripped
             pre_clean = df[col].astype(str).str.contains(r'[A-Z]|\s+$|^\s+', regex=True).sum()
-            df[col] = df[col].astype(str).str.lower().str.strip()
+            
+            # Special handling for email columns - preserve @ and domain
+            if any(keyword in col_lower for keyword in ['email', 'e-mail', 'mail']):
+                def clean_email(email):
+                    if pd.isna(email) or email is None or str(email).strip() == '':
+                        return ""
+                    email_str = str(email).strip().lower()
+                    # Remove any spaces around @ symbol
+                    email_str = email_str.replace(' @ ', '@').replace('@ ', '@').replace(' @', '@')
+                    # Basic validation: must contain @ and a dot after @
+                    if '@' in email_str and '.' in email_str.split('@')[-1]:
+                        return email_str
+                    return ""  # Invalid email format
+                df[col] = df[col].apply(clean_email)
+            else:
+                # Standard text cleaning for names, addresses, etc.
+                df[col] = df[col].astype(str).str.lower().str.strip()
+            
             change_count = pre_clean
         elif strat == StandardizationStrategy.EXTRACT_NUMBERS.value or strat == "EXTRACT_NUMBERS":
             # Check for non-digit characters in phone (excluding + prefix)
             pre_clean = df[col].astype(str).str.contains(r'[^\d+]', regex=True).sum()
             def to_e164(p):
-                if pd.isna(p) or p is None: return ""
-                s = str(p).lower()
+                if pd.isna(p) or p is None:
+                    return ""
+                s = str(p).strip().lower()
+                
+                # Handle extensions
                 if 'ext' in s or 'x' in s:
                     s = s.split('ext')[0].split('x')[0]
+                
+                # Extract all digits
                 digits = re.sub(r'\D+', '', s)
-                if not digits: return ""
+                
+                # If no digits found, return empty
+                if not digits:
+                    return ""
+                
+                # If digits are too short (less than 7), likely invalid
+                if len(digits) < 7:
+                    return ""
+                
+                # Add + prefix for E.164 format
                 return "+" + digits
+            
             df[col] = df[col].apply(to_e164)
             change_count = pre_clean
         elif strat == StandardizationStrategy.TO_DATETIME_ISO.value or strat == "TO_DATETIME_ISO":
@@ -274,7 +376,7 @@ class CRMDataPipelineEnv(Environment):
             return -0.2
             
         if change_count == 0:
-            self._last_feedback = f"ERROR: Column '{col}' is already perfectly clean! Do NOT touch '{col}' again. Choose a different column (like registration_date or contact_email)."
+            self._last_feedback = f"ERROR: Column '{col}' is already perfectly clean! Do NOT touch '{col}' again. Choose a different column based on the data_quality_report."
             return -0.1
             
         self._last_feedback = f"Standardized {action.source}.{col} using {strat}. Fixed {change_count} rows."
@@ -306,11 +408,20 @@ class CRMDataPipelineEnv(Environment):
         start_len = len(df)
         
         if action.deduplication_strategy == DeduplicationStrategy.EXACT_EMAIL:
-             df.drop_duplicates(subset=["email"], inplace=True)
+             email_cols = [c for c in df.columns if 'email' in c.lower() or 'e-mail' in c.lower() or 'mail' in c.lower()]
+             col = email_cols[0] if email_cols else (action.column if action.column in df.columns else None)
+             if not col:
+                 self._last_feedback = f"Error: No email column found for EXACT_EMAIL deduplication in {action.source}. Choose another action."
+                 return -0.1
+             df.drop_duplicates(subset=[col], inplace=True)
         elif action.deduplication_strategy == DeduplicationStrategy.FUZZY_NAME_PHONE:
-             # Basic fuzzy proxy: lowercase strip name and extract number phone match
-             df["_tmp_name"] = df["name"].astype(str).str.lower().str.strip()
-             df["_tmp_phone"] = df["phone"].astype(str).str.replace(r'\D+', '', regex=True)
+             name_cols = [c for c in df.columns if 'name' in c.lower() or 'donor' in c.lower()]
+             phone_cols = [c for c in df.columns if 'phone' in c.lower() or 'mobile' in c.lower()]
+             if not name_cols or not phone_cols:
+                 self._last_feedback = f"Error: Name or phone columns missing for FUZZY_NAME_PHONE deduplication in {action.source}. Choose another action."
+                 return -0.1
+             df["_tmp_name"] = df[name_cols[0]].astype(str).str.lower().str.strip()
+             df["_tmp_phone"] = df[phone_cols[0]].astype(str).str.replace(r'\D+', '', regex=True)
              df.drop_duplicates(subset=["_tmp_name", "_tmp_phone"], inplace=True)
              df.drop(columns=["_tmp_name", "_tmp_phone"], inplace=True)
              
