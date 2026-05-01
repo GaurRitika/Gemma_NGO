@@ -1,83 +1,91 @@
-# 🌍 Gemma_NGO
+# 🌍 Gemma for Good: Democratizing Data Dignity
 
-> **Submission for the Gemma 4 Good Hackathon**  
-> **Impact Track:** Safety & Trust / Digital Equity & Inclusivity  
-> **Technology Track:** Ollama
-
-A privacy-first, local AI agent powered by **Gemma 4 (via Ollama)** that autonomously cleans, standardizes, and reconciles messy NGO donor and beneficiary data—without ever sending sensitive Personally Identifiable Information (PII) to the cloud.
+> **"Data is a human right, but cleaning it shouldn't be a human burden."**  
+> *Submission for the **Gemma 4 Good Hackathon** | **Impact Track:** Digital Equity & Inclusivity | **Technology Track:** Ollama*
 
 ---
 
-## 📖 The Problem
+## 🎥 The Pitch & Demo
+[![Watch the Demo Video](https://img.shields.io/badge/🎥-Watch_Video_Pitch-FF0000?style=for-the-badge&logo=youtube)](VIDEO_LINK_HERE)
 
-Non-Governmental Organizations (NGOs) and grassroots community groups operate on the front lines of social impact. They collect vital data—donor lists, volunteer registries, and beneficiary tracking—often in chaotic, disconnected, and non-standard formats (Excel, CSVs, handwritten transcripts). 
+---
 
-While AI data-cleaning tools exist, **NGOs cannot use them**. Uploading vulnerable community data or sensitive donor PII to a centralized cloud AI API violates strict privacy policies, GDPR, and basic operational security. As a result, impact workers spend hundreds of hours manually formatting spreadsheets instead of helping people.
+## 📖 The "Silent" Global Challenge: A Story of Fragmented Hope
 
-## 💡 Our Solution: Dignity-First Data Engineering
+Imagine a field volunteer in a remote clinic, working on three hours of sleep, manually typing names into a donated laptop with a flickering screen. Or an NGO director trying to merge three different volunteer lists from three different years just to know how many families they actually helped.
 
-The **Gemma 4 CRM Cleanup Copilot** bridges the gap between humans and data by bringing the intelligence to the edge. By leveraging the **Ollama** implementation of the new Gemma 4 model, we built an autonomous data pipeline that runs entirely on local hardware. 
+Enterprise giants solve this with million-dollar data engineering teams. **Grassroots NGOs do not have that luxury.** They face a heartbreaking choice:
+1. **The Cloud Privacy Trap**: Upload sensitive beneficiary data to a centralized AI API—violating the very trust and safety of the vulnerable communities they serve.
+2. **The Manual Burden**: Spend hundreds of hours on soul-crushing spreadsheet cleaning instead of being in the field saving lives.
+
+**Data inequality is a barrier to global resilience.** We believe that frontier intelligence shouldn't be a privilege of the rich; it should be a tool for the brave.
+
+---
+
+## 💡 The Solution: Gemma 4 CRM Cleanup Copilot
+
+We didn't just build a tool; we built a **local-first data engineering partner**. 
+
+The **Gemma 4 CRM Cleanup Copilot** brings world-class intelligence to the very edge of the map. By leveraging **Gemma 4 via Ollama**, we created an autonomous agent that runs entirely on local hardware. 
 
 **Zero cloud tracking. Zero data leakage. 100% Data Dignity.**
 
-### Key Features
-- **Local Agentic Loop:** Gemma 4 acts as an autonomous agent, inferring the schema of raw uploads, identifying duplicates via fuzzy matching, and imputing missing values (like standardizing geographical coordinates or repairing malformed emails) using contextual AI inference.
-- **Privacy by Design:** Because Gemma 4 runs locally via Ollama, the entire processing pipeline is air-gapped from external servers.
-- **Premium, Human-Centric UI:** We built a gorgeous, accessible frontend designed for non-technical users. It features an interactive drag-and-drop upload, a live-animated "Processing Pipeline", and a visually striking "Cleaning Results" comparison dashboard.
-- **AI Intelligence Hub:** The system doesn't just clean data; it explains *why* it made changes, fostering trust and transparency between the AI and the human operator.
+---
+
+## 🛠 Technical Architecture: Agentic Intelligence at the Edge
+
+### 🧠 The Agentic Batch Planner (Ollama Native)
+Unlike traditional "one-row-at-a-time" LLM wrappers that are slow and expensive, our system uses a **High-Speed Batch Planner**. 
+- **Multi-Step Reasoning**: Gemma 4 is prompted once to analyze the entire dataset's quality report. It then generates a complex, ordered JSON cleaning plan.
+- **Autonomous Execution**: The backend translates Gemma's linguistic logic into optimized Python/Pandas operations.
+- **Self-Correcting Loop**: If a step fails, the agent observes the error and adjusts its strategy in real-time.
+
+### 🛡️ Deterministic Safety & Fallback
+In field environments, hardware can be unpredictable. We implemented a **Hybrid Intelligence System**:
+- **Ollama Probe**: A 2-second heart-beat check ensures Ollama is alive before every call.
+- **Rule-Based Fallback Engine**: If local resources are low or the model times out (8s limit), our deterministic engine takes over instantly. The cleaning **never stops**, ensuring the user is never left hanging.
+
+### 🎨 Human-Centric Design
+- **Glassmorphic UI**: A premium, "Alive" interface that feels responsive and transparent.
+- **Live Pipeline Visualization**: Users watch Gemma's "Chain of Thought" as it moves through steps like `Standardize`, `Handle Missing`, and `Deduplicate`.
 
 ---
 
-## 🏗 Architecture & Technical Depth
+## 🚀 Test the Impact (Try the Demo)
 
-Our application is built to demonstrate real-world utility and robust engineering, perfectly aligning with the "Source of Truth" requirement for the hackathon.
+Experience the "Wow" factor yourself. We have provided a **Super Messy Dataset** specifically designed to test Gemma's reasoning limits.
 
-1. **The Brain (Gemma 4 + Ollama):** We utilize the native function-calling and deep linguistic understanding of Gemma 4. The model iteratively evaluates the "dirtiness" of the dataset, selecting standardizations (UTF-8 normalization, ISO-3166 naming, Title Case) dynamically.
-2. **The Backend (FastAPI + Pandas):** A lightweight, asynchronous Python FastAPI server orchestrates the agent loop. It manages the file ingestion, chunks the data to respect local context windows, and drives the conversational state with the Ollama API.
-3. **The Frontend (Vanilla HTML/CSS/JS):** To ensure maximum accessibility and lowest overhead (digital equity), the UI is built without heavy frameworks. It uses a custom CSS design system featuring micro-animations, dynamic state transitions (Upload → Workspace → Results), and a completely responsive layout.
+### 📥 Step 1: Download the Test Data
+[![Download Test Dataset](https://img.shields.io/badge/📥-Download_Messy_Test_Data-1E8E3E?style=for-the-badge&logo=csv)](./SUPER_MESSY_NGO_DONORS.csv)
+*This file contains duplicate emails, broken phone formats, and missing signup dates—the perfect stress test.*
 
----
+### 🛠 Step 2: Local Setup
+1.  **Install [Ollama](https://ollama.com/)** and pull the model: `ollama pull gemma`.
+2.  **Clone & Install**:
+    ```bash
+    git clone https://github.com/GaurRitika/Gemma_NGO.git
+    cd Gemma_NGO
+    pip install fastapi uvicorn pandas python-multipart requests
+    ```
+3.  **Run the Backend**:
+    ```bash
+    python -m server.app
+    ```
 
-## 🚀 Getting Started (Live Demo Instructions)
-
-You can run this entire stack locally to verify the technical execution. 
-
-### Prerequisites
-1. Install [Ollama](https://ollama.com/).
-2. Pull the Gemma model: `ollama run gemma` (Ensure the model server is running).
-3. Install Python 3.10+.
-
-### Installation
-```bash
-# 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/Gemma-4-CRM-Cleanup-Copilot.git
-cd Gemma-4-CRM-Cleanup-Copilot
-
-# 2. Install Python dependencies
-pip install fastapi uvicorn pandas python-multipart requests
-
-# 3. Start the application
-python -m server.app
-```
-
-### Experiencing the App
-1. Open `http://localhost:8080/ui/index.html` in your browser.
-2. Click **Start Cleaning Data** (or navigate to the Upload dashboard).
-3. Drag and drop the provided `SUPER_MESSY_NGO_DONORS.csv` (located in the root directory) into the dropzone.
-4. Watch the **Processing Pipeline** UI animate as the backend Gemma 4 agent reasons through the dataset.
-5. Review the final **Cleaning Results** and click "Export CSV" to see the sanitized output.
-
-> *Note: For a quick visual showcase of the final output, click the **Impact** link in the top navigation bar!*
+### 🧪 Step 3: Run the Test
+1.  Open `http://localhost:8080/ui/dashboard.html`.
+2.  **Upload** the `SUPER_MESSY_NGO_DONORS.csv` you just downloaded.
+3.  Click **"Start Cleaning Data"** and watch Gemma 4 autonomously restore order to the chaos.
 
 ---
 
-## 🎥 Hackathon Video Pitch
+## 🔮 Future Vision: Beyond the Desktop
+Our roadmap involves optimizing this pipeline using **Google AI Edge's LiteRT**. We want this to run on a $20 smartphone in a refugee camp, offline, with the same level of intelligence. 
 
-*(Video Link will be added here prior to the submission deadline)*
-
-## 🔮 Future Work & Impact
-
-Our next step is to optimize this pipeline using **Google AI Edge's LiteRT** to allow this entire workflow to run on mobile devices in offline, field-based environments (e.g., refugee camps or remote clinics). By empowering frontline workers with local frontier intelligence, we can ensure that every hour saved on data entry is an hour spent changing lives.
+By empowering frontline workers with local frontier intelligence, we ensure that **every hour saved on a spreadsheet is an hour spent on a human story.**
 
 ---
+
+**Lead Developer:** Ritika Gaur ([GaurRitika](https://github.com/GaurRitika))  
+**Contact:** [devritika.gaur@gmail.com](mailto:devritika.gaur@gmail.com) | +91 7905636064  
 *Built with ❤️ for the Gemma 4 Good Hackathon.*
