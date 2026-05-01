@@ -166,6 +166,28 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTimelineStep(4, 'All tables cleaned and verified!');
         addLog('SUBMIT_PIPELINE', `Pipeline complete! ${totalSteps} actions executed. Total reward: ${batchData.total_reward}`);
 
+        // Calculate real stats
+        let totalDupesRemoved = 0;
+        let totalMissingFixed = 0;
+
+        steps.forEach(step => {
+            const feedback = step.feedback || "";
+            // Parse "Deduplicated ..., removed X rows"
+            const dupeMatch = feedback.match(/removed (\d+) rows/i);
+            if (dupeMatch) totalDupesRemoved += parseInt(dupeMatch[1]);
+
+            // Parse "Handled X missing values"
+            const missingMatch = feedback.match(/handled (\d+) missing values/i);
+            if (missingMatch) totalMissingFixed += parseInt(missingMatch[1]);
+            
+            // Also check for "Fixed X rows" from standardization which often fixes missing values too
+            const fixedMatch = feedback.match(/Fixed (\d+) rows/i);
+            if (fixedMatch && step.action === 'STANDARDIZE_COLUMN') {
+                // We don't want to double count, but often standardization fixes formatting that might have been null-ish
+                // For now, let's stick to explicit HANDLE_MISSING and DEDUPLICATE stats for accuracy
+            }
+        });
+
         // Show results
         setTimeout(() => {
             if (workspaceView && resultsView) {
@@ -174,6 +196,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (initialRawData) renderTable('results-raw-table', initialRawData);
             if (batchData.table_data) renderTable('results-clean-table', batchData.table_data);
+            
+            // Update stats in UI
+            const dupesElem = document.getElementById('dupes-count');
+            const missingElem = document.getElementById('missing-count');
+            const qualityElem = document.getElementById('quality-score');
+
+            if (dupesElem) dupesElem.textContent = totalDupesRemoved.toLocaleString();
+            if (missingElem) missingElem.textContent = totalMissingFixed.toLocaleString();
+            if (qualityElem) {
+                // Heuristic quality score: start at 70%, increase based on reward
+                const baseScore = 75.0;
+                const bonus = Math.min(24.9, (batchData.total_reward || 0) * 50);
+                qualityElem.textContent = (baseScore + bonus).toFixed(1) + '%';
+            }
+
             if (exportBtn) exportBtn.disabled = false;
         }, 800);
 
