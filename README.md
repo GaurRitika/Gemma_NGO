@@ -8,7 +8,7 @@
 ---
 
 ## 🎥 The Pitch & Demo
-[![Watch the Demo Video](https://img.shields.io/badge/🎥-Watch_Video_Pitch-FF0000?style=for-the-badge&logo=youtube)](VIDEO_LINK_HERE)
+[![Watch the Demo Video](https://img.shields.io/badge/🎥-Watch_Video_Pitch-FF0000?style=for-the-badge&logo=youtube)](https://youtu.be/66-RcTpVVlM)
 
 ---
 
