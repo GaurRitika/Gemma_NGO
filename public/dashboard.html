@@ -20,8 +20,9 @@
         </div>
         <div class="nav-links">
             <a href="/ui/index.html">Our Story</a>
-            <a href="#" class="active">Upload</a>
+            <a href="/ui/dashboard.html" class="active">Upload</a>
             <a href="/ui/impact.html">Impact</a>
+            <a href="#" id="nav-insights">Insights</a>
             <a href="#">Security</a>
         </div>
         <div class="nav-actions">
@@ -322,6 +323,18 @@
                             <span class="tag">Title Case</span>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- NEW: DONOR IMPACT HISTORY SECTION -->
+            <div id="donor-history-section" class="donor-history-container slide-up">
+                <div class="reconciliation-header">
+                    <h3>Donor Impact History</h3>
+                    <p class="section-sub">A longitudinal view of engagement and community impact.</p>
+                </div>
+
+                <div class="history-grid" id="donor-history-grid">
+                    <!-- Dynamic cards will be injected here by app.js -->
                 </div>
             </div>
         </main>
